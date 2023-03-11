@@ -1,0 +1,8 @@
+[chttp]
+port=5901
+
+		
+[csql]
+dialect="sqlite3"
+dsn="./copper-test.db"
+max_open_connections=1
