@@ -12,6 +12,7 @@ import (
 	"github.com/gocopper/copper/csql"
 	"github.com/google/wire"
 	"github.com/isuquo/copper-test/pkg/app"
+	"github.com/isuquo/copper-test/pkg/templates"
 	"github.com/isuquo/copper-test/web"
 	"github.com/isuquo/copper-test/web/build"
 )
@@ -55,9 +56,12 @@ func InitServer(copperApp *copper.App) (*chttp.Server, error) {
 		return nil, err
 	}
 	readerWriter := chttp.NewReaderWriter(htmlRenderer, chttpConfig, logger)
+	querier := csql.NewQuerier(db, config)
+	queries := templates.NewQueries(querier)
 	newRouterParams := app.NewRouterParams{
-		RW:     readerWriter,
-		Logger: logger,
+		RW:        readerWriter,
+		Logger:    logger,
+		Templates: queries,
 	}
 	router := app.NewRouter(newRouterParams)
 	newHTMLRouterParams := chttp.NewHTMLRouterParams{

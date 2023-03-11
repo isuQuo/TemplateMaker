@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/gocopper/copper v0.7.2
+	github.com/google/uuid v1.1.2
 	github.com/google/wire v0.5.0
 	github.com/mattn/go-sqlite3 v1.14.12
 )
