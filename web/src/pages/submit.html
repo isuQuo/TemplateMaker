@@ -1,0 +1,42 @@
+{{ define "title" }}
+Submit
+{{ end }}
+
+{{ define "links" }}
+{{ end }}
+
+{{define "templatelist"}}
+{{end}}
+
+{{ define "content" }}
+<form method="post" action="/submit">
+    <div class="mb-4">
+        <label for="title" class="block text-gray-700 font-bold mb-2">Subject:</label>
+        <input type="text" name="title" id="title"
+            class="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+            placeholder="Enter the title of your content">
+    </div>
+    <div class="mb-4">
+        <label for="description" class="block text-gray-700 font-bold mb-2"></label>Description:</label>
+        <textarea name="description" id="description"
+            class="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+            placeholder="Enter a brief description of your content"></textarea>
+    </div>
+    <div class="mb-4">
+        <label for="content" class="block text-gray-700 font-bold mb-2">Assessment:</label>
+        <textarea name="content" id="content"
+            class="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+            placeholder="Enter your content"></textarea>
+    </div>
+    <div class="mb-4">
+        <label for="content" class="block text-gray-700 font-bold mb-2">Recommendations:</label>
+        <textarea name="content" id="content"
+            class="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+            placeholder="Enter your content"></textarea>
+    </div>
+    <div class="flex justify-end">
+        <button type="submit"
+            class="py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-md shadow-md">Submit</button>
+    </div>
+</form>
+{{ end}}
