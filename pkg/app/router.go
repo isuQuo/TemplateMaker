@@ -55,8 +55,17 @@ func (ro *Router) Routes() []chttp.Route {
 }
 
 func (ro *Router) HandleIndexPage(w http.ResponseWriter, r *http.Request) {
+	allTemplates, err := ro.templates.ListTemplates(r.Context())
+	if err != nil {
+		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to list templates", nil))
+		return
+	}
+
 	ro.rw.WriteHTML(w, r, chttp.WriteHTMLParams{
 		PageTemplate: "index.html",
+		Data: map[string][]templates.Template{
+			"Templates": allTemplates,
+		},
 	})
 }
 
@@ -68,13 +77,14 @@ func (ro *Router) HandleSubmitPage(w http.ResponseWriter, r *http.Request) {
 
 func (ro *Router) HandleSubmitTemplate(w http.ResponseWriter, r *http.Request) {
 	var (
-		subject        = strings.TrimSpace(r.PostFormValue("title"))
+		name           = strings.TrimSpace(r.PostFormValue("name"))
+		subject        = strings.TrimSpace(r.PostFormValue("subject"))
 		description    = strings.TrimSpace(r.PostFormValue("description"))
 		assessment     = strings.TrimSpace(r.PostFormValue("assessment"))
 		recommendation = strings.TrimSpace(r.PostFormValue("recommendation"))
 	)
 
-	if subject == "" || description == "" || assessment == "" || recommendation == "" {
+	if name == "" || subject == "" || description == "" || assessment == "" || recommendation == "" {
 		ro.rw.WriteHTMLError(w, r, cerrors.New(nil, "invalid template", map[string]interface{}{
 			"form": r.Form,
 		}))
@@ -83,10 +93,11 @@ func (ro *Router) HandleSubmitTemplate(w http.ResponseWriter, r *http.Request) {
 
 	err := ro.templates.SaveTemplate(r.Context(), &templates.Template{
 		ID:             uuid.New().String(),
+		Name:           name,
 		Subject:        subject,
 		Description:    description,
-		Assessment:     "user1",
-		Recommendation: "user2",
+		Assessment:     assessment,
+		Recommendation: recommendation,
 	})
 	if err != nil {
 		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to save template", map[string]interface{}{

@@ -6,3 +6,4 @@ port=5901
 dialect="sqlite3"
 dsn="./copper-test.db"
 max_open_connections=1
+migrations.direction="up"

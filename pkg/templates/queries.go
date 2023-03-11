@@ -21,7 +21,7 @@ type Queries struct {
 
 // Here are some example queries that use Querier to unmarshal results into Go strcuts
 func (q *Queries) ListTemplates(ctx context.Context) ([]Template, error) {
-	const query = "SELECT * FROM templates ORDER BY created_at DESC"
+	const query = "SELECT * FROM templates;"
 
 	var (
 		templates []Template
@@ -44,12 +44,13 @@ func (q *Queries) GetTemplateByID(ctx context.Context, id string) (*Template, er
 
 func (q *Queries) SaveTemplate(ctx context.Context, template *Template) error {
 	const query = `
-	INSERT INTO templates (id, subject, description, assessment, recommendation)
-	VALUES (?, ?, ?, ?, ?)
-	ON CONFLICT (id) DO UPDATE SET subject=?, description=? assessment=?, recommendation=?`
+	INSERT INTO templates (id, name, subject, description, assessment, recommendation)
+	VALUES (?, ?, ?, ?, ?, ?)`
+	//ON CONFLICT (id) DO UPDATE SET name=?, subject=?, description=?, assessment=?, recommendation=?`
 
 	_, err := q.querier.Exec(ctx, query,
 		template.ID,
+		template.Name,
 		template.Subject,
 		template.Description,
 		template.Assessment,
