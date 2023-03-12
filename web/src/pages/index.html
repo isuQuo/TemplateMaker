@@ -20,7 +20,8 @@ Template Maker
 {{ define "links" }}
 <div class="flex mb-4">
     <a href="/submit"
-        class="ml-4 py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-md shadow-md inline-block">Create New Template</a>
+        class="ml-4 py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-md shadow-md inline-block">Create
+        New Template</a>
 </div>
 {{ end }}
 
@@ -28,19 +29,24 @@ Template Maker
 {{ template "links" .}}
 <div class="flex-col space-y-2">
     {{ range .Templates }}
-        <div class="flex space-x-0.5 text-sm text-neutral-400">
-            <div>
-                <div class="flex justify-between items-center cursor-pointer" id="expandable-header-{{.ID}}">
-                  <span class="text-6xl font-bold text-black-1000">{{ .Name }}</span>
-                  <span class="text-gray-400 text-sm">(click to expand)</span>
-                </div>
-                <div class="hidden" id="expandable-content-{{.ID}}">
-                  <div class="leading-1 text-[35px] cursor-pointer">{{ .Subject }}</div>
-                </div>
-              </div>
+    <div class="flex space-x-0.5 text-sm text-neutral-400">
+        <div>
+            <div class="flex justify-between items-center cursor-pointer" id="expandable-header-{{.ID}}">
+                <span class="text-6xl font-bold text-black-1000">{{ .Name }}</span>
+                <span class="text-gray-400 text-sm">(click to expand)</span>
             </div>
-          </div>
-    {{ end }}
+            <div class="hidden" id="expandable-content-{{.ID}}">
+                <div class="leading-1 text-[35px] cursor-pointer">{{ .Subject }}
+                    <a href="/edit?id={{.ID}}"
+                        class="ml-2 py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-md shadow-md inline-block text-sm">Edit</a>
+                    <a href="/send"
+                        class="ml-2 py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-md shadow-md inline-block text-sm">Send</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{ end }}
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>

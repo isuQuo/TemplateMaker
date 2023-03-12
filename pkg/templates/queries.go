@@ -59,3 +59,21 @@ func (q *Queries) SaveTemplate(ctx context.Context, template *Template) error {
 
 	return err
 }
+
+func (q *Queries) EditTemplate(ctx context.Context, template *Template) error {
+	const query = `
+	UPDATE templates
+	SET name=?, subject=?, description=?, assessment=?, recommendation=?
+	WHERE id=?`
+
+	_, err := q.querier.Exec(ctx, query,
+		template.Name,
+		template.Subject,
+		template.Description,
+		template.Assessment,
+		template.Recommendation,
+		template.ID,
+	)
+
+	return err
+}
