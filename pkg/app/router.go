@@ -41,13 +41,13 @@ func (ro *Router) Routes() []chttp.Route {
 		},
 
 		{
-			Path:    "/edit",
-			Methods: []string{http.MethodPut},
+			Path:    "/edit/{id}",
+			Methods: []string{http.MethodPost},
 			Handler: ro.HandleEditTemplate,
 		},
 
 		{
-			Path:    "/edit",
+			Path:    "/edit/{id}",
 			Methods: []string{http.MethodGet},
 			Handler: ro.HandleEditPage,
 		},
@@ -128,7 +128,7 @@ func (ro *Router) HandleSubmitTemplate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ro *Router) HandleEditPage(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("id")
+	id := string(chttp.URLParams(r)["id"])
 	template, err := ro.templates.GetTemplateByID(r.Context(), id)
 	if err != nil {
 		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to get template", map[string]interface{}{
@@ -181,7 +181,7 @@ func (ro *Router) HandleEditTemplate(w http.ResponseWriter, r *http.Request) {
 // TODO: Parse Log and write JSON object to writer
 func (ro *Router) HandleSubmitSplitPage(w http.ResponseWriter, r *http.Request) {
 	var jsonObject = `{
-		"Log": "RETURNING LOG"
+	"Log": "RETURNING LOG"
 }`
 
 	ro.rw.WriteHTML(w, r, chttp.WriteHTMLParams{
