@@ -37,9 +37,32 @@ Submit
             class="w-full py-2 px-4 border border-black-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-black"
             placeholder="Enter your recommendations"></textarea>
     </div>
-    <div class="flex justify-end">
+    <div class="flex flex-row justify-between">
+        <button type="button" onclick="importLog()"
+            class="py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-md shadow-md">Import Log</button>
         <button type="submit"
             class="py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-md shadow-md">Submit</button>
     </div>
 </form>
+
+<script>
+    function importLog() {
+        // Make an AJAX request to the Go server
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "/submit-split", true);
+        xhr.send();
+
+        // Handle the response from the server
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200) {
+                    // Do something with the response from the server
+                    window.location.href = "/submit-split";
+                } else {
+                    console.error(xhr.statusText);
+                }
+            }
+        }
+    }
+</script>
 {{ end}}

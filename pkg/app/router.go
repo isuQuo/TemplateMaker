@@ -35,6 +35,12 @@ type Router struct {
 func (ro *Router) Routes() []chttp.Route {
 	return []chttp.Route{
 		{
+			Path:    "/submit-split",
+			Methods: []string{http.MethodGet},
+			Handler: ro.HandleSubmitSplitPage,
+		},
+
+		{
 			Path:    "/edit",
 			Methods: []string{http.MethodPut},
 			Handler: ro.HandleEditTemplate,
@@ -170,4 +176,18 @@ func (ro *Router) HandleEditTemplate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+// TODO: Parse Log and write JSON object to writer
+func (ro *Router) HandleSubmitSplitPage(w http.ResponseWriter, r *http.Request) {
+	var jsonObject = `{
+		"Log": "RETURNING LOG"
+}`
+
+	ro.rw.WriteHTML(w, r, chttp.WriteHTMLParams{
+		PageTemplate: "submit-split.html",
+		Data: map[string]interface{}{
+			"Log": jsonObject,
+		},
+	})
 }
