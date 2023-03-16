@@ -35,6 +35,12 @@ type Router struct {
 func (ro *Router) Routes() []chttp.Route {
 	return []chttp.Route{
 		{
+			Path:    "/edit-split/{id}",
+			Methods: []string{http.MethodGet},
+			Handler: ro.HandleEditSplitPage,
+		},
+
+		{
 			Path:    "/submit-split",
 			Methods: []string{http.MethodGet},
 			Handler: ro.HandleSubmitSplitPage,
@@ -189,5 +195,53 @@ func (ro *Router) HandleSubmitSplitPage(w http.ResponseWriter, r *http.Request) 
 		Data: map[string]interface{}{
 			"Log": jsonObject,
 		},
+	})
+}
+
+func (ro *Router) HandleEditSplitPage(w http.ResponseWriter, r *http.Request) {
+	id := string(chttp.URLParams(r)["id"])
+	template, err := ro.templates.GetTemplateByID(r.Context(), id)
+	if err != nil {
+		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to get template", map[string]interface{}{
+			"form": r.Form,
+		}))
+		return
+	}
+
+	type TemplateData struct {
+		Template templates.Template
+		Log      map[string]interface{}
+	}
+
+	// Replace with file object
+	var jsonObject = `{
+		"name": "John Doe",
+		"age": 30,
+		"address": {
+		  "street": "123 Main St",
+		  "city": "Anytown",
+		  "state": "CA",
+		  "zip": "12345"
+		},
+		"phone_numbers": [
+		  {
+			"type": "home",
+			"number": "555-1234"
+		  },
+		  {
+			"type": "work",
+			"number": "555-5678"
+		  }
+		]
+	  }`
+
+	data := TemplateData{
+		Template: *template,
+		Log:      map[string]interface{}{"Log": jsonObject},
+	}
+
+	ro.rw.WriteHTML(w, r, chttp.WriteHTMLParams{
+		PageTemplate: "edit-split.html",
+		Data:         data,
 	})
 }

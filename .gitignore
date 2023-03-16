@@ -6,3 +6,4 @@ vendor/
 config/local.toml
 build/
 node_modules/
+todo.txt

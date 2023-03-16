@@ -1,0 +1,52 @@
+{{ define "title" }}
+Edit
+{{ end }}
+
+{{ define "links" }}
+{{ end }}
+
+{{ define "content" }}
+<div class="flex min-w-screen">
+    <div class="w-1/2 h-full w-full bg-black-100 p-6">
+        <form method="post" action="/edit/{{.Template.ID}}">
+            <div class="mb-4">
+                <label for="name" class="block text-black-700 font-bold mb-2">Name:</label>
+                <input type="text" name="name" id="name" value="{{ .Template.Name }}" required="true"
+                    class="w-full py-2 px-4 border border-black-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-black"
+                    placeholder="Enter the name">
+            </div>
+            <div class="mb-4">
+                <label for="subject" class="block text-black-700 font-bold mb-2">Subject:</label>
+                <input type="text" name="subject" id="subject" value="{{ .Template.Subject }}" required="true"
+                    class="w-full py-2 px-4 border border-black-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-black"
+                    placeholder="Enter the template subject">
+            </div>
+            <div class="mb-4">
+                <label for="description" class="block text-black-700 font-bold mb-2"></label>Description:</label>
+                <textarea name="description" id="description" required="true"
+                    class="w-full py-2 px-4 border border-black-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-black"
+                    placeholder="Enter your description">{{ .Template.Description }}</textarea>
+            </div>
+            <div class="mb-4">
+                <label for="assessment" class="block text-black-700 font-bold mb-2">Assessment:</label>
+                <textarea name="assessment" id="assessment" required="true"
+                    class="w-full py-2 px-4 border border-black-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-black"
+                    placeholder="Enter your assessment">{{ .Template.Assessment }}</textarea>
+            </div>
+            <div class="mb-4">
+                <label for="recommendation" class="block text-black-700 font-bold mb-2">Recommendations:</label>
+                <textarea name="recommendation" id="recommendation" required="true"
+                    class="w-full py-2 px-4 border border-black-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-black"
+                    placeholder="Enter your recommendations">{{ .Template.Recommendation }}</textarea>
+            </div>
+            <div class="flex justify-end">
+                <button type="submit"
+                    class="py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-md shadow-md">Submit</button>
+            </div>
+            <div class="w-1/2 h-full w-full bg-black-200 p-6">
+                <pre id="json-viewer">{{ .Log }}</pre>
+            </div>
+        </form>
+    </div>
+</div>
+{{ end}}
