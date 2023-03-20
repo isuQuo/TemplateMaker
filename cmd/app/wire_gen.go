@@ -39,7 +39,9 @@ func InitServer(copperApp *copper.App) (*chttp.Server, error) {
 	requestLoggerMiddleware := chttp.NewRequestLoggerMiddleware(logger)
 	htmlDir := _wireFSValue
 	staticDir := _wireEmbedFSValue
-	v := web.HTMLRenderFuncs()
+	querier := csql.NewQuerier(db, config)
+	queries := templates.NewQueries(querier)
+	v := web.HTMLRenderFuncs(queries)
 	chttpConfig, err := chttp.LoadConfig(loader)
 	if err != nil {
 		return nil, err
@@ -56,8 +58,6 @@ func InitServer(copperApp *copper.App) (*chttp.Server, error) {
 		return nil, err
 	}
 	readerWriter := chttp.NewReaderWriter(htmlRenderer, chttpConfig, logger)
-	querier := csql.NewQuerier(db, config)
-	queries := templates.NewQueries(querier)
 	newRouterParams := app.NewRouterParams{
 		RW:        readerWriter,
 		Logger:    logger,

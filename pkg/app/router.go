@@ -79,17 +79,8 @@ func (ro *Router) Routes() []chttp.Route {
 }
 
 func (ro *Router) HandleIndexPage(w http.ResponseWriter, r *http.Request) {
-	allTemplates, err := ro.templates.ListTemplates(r.Context())
-	if err != nil {
-		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to list templates", nil))
-		return
-	}
-
 	ro.rw.WriteHTML(w, r, chttp.WriteHTMLParams{
 		PageTemplate: "index.html",
-		Data: map[string][]templates.Template{
-			"Templates": allTemplates,
-		},
 	})
 }
 
