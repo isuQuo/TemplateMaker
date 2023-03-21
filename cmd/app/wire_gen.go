@@ -13,6 +13,7 @@ import (
 	"github.com/google/wire"
 	"github.com/isuquo/copper-test/pkg/app"
 	"github.com/isuquo/copper-test/pkg/templates"
+	"github.com/isuquo/copper-test/pkg/users"
 	"github.com/isuquo/copper-test/web"
 	"github.com/isuquo/copper-test/web/build"
 )
@@ -58,10 +59,12 @@ func InitServer(copperApp *copper.App) (*chttp.Server, error) {
 		return nil, err
 	}
 	readerWriter := chttp.NewReaderWriter(htmlRenderer, chttpConfig, logger)
+	usersQueries := users.NewQueries(querier)
 	newRouterParams := app.NewRouterParams{
 		RW:        readerWriter,
 		Logger:    logger,
 		Templates: queries,
+		Users:     usersQueries,
 	}
 	router := app.NewRouter(newRouterParams)
 	newHTMLRouterParams := chttp.NewHTMLRouterParams{

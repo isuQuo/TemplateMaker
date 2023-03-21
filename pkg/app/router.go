@@ -6,18 +6,21 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/gocopper/copper/cerrors"
 	"github.com/gocopper/copper/chttp"
 	"github.com/gocopper/copper/clogger"
 	"github.com/isuquo/copper-test/pkg/logs"
 	"github.com/isuquo/copper-test/pkg/templates"
+	"github.com/isuquo/copper-test/pkg/users"
 )
 
 type NewRouterParams struct {
 	RW        *chttp.ReaderWriter
 	Logger    clogger.Logger
 	Templates *templates.Queries
+	Users     *users.Queries
 }
 
 func NewRouter(p NewRouterParams) *Router {
@@ -25,6 +28,7 @@ func NewRouter(p NewRouterParams) *Router {
 		rw:        p.RW,
 		logger:    p.Logger,
 		templates: p.Templates,
+		users:     p.Users,
 	}
 }
 
@@ -32,10 +36,35 @@ type Router struct {
 	rw        *chttp.ReaderWriter
 	logger    clogger.Logger
 	templates *templates.Queries
+	users     *users.Queries
 }
 
 func (ro *Router) Routes() []chttp.Route {
 	return []chttp.Route{
+		{
+			Path:    "/signin",
+			Methods: []string{http.MethodPost},
+			Handler: ro.HandleUserSignin,
+		},
+
+		{
+			Path:    "/signin",
+			Methods: []string{http.MethodGet},
+			Handler: ro.HandleUserSigninPage,
+		},
+
+		{
+			Path:    "/signup",
+			Methods: []string{http.MethodPost},
+			Handler: ro.HandleUserSignup,
+		},
+
+		{
+			Path:    "/signup",
+			Methods: []string{http.MethodGet},
+			Handler: ro.HandleUserSignupPage,
+		},
+
 		{
 			Path:    "/edit-split/{id}",
 			Methods: []string{http.MethodGet},
@@ -276,4 +305,84 @@ func (ro *Router) HandleEditSplitPage(w http.ResponseWriter, r *http.Request) {
 		PageTemplate: "edit-split.html",
 		Data:         data,
 	})
+}
+
+func (ro *Router) HandleUserSignupPage(w http.ResponseWriter, r *http.Request) {
+	ro.rw.WriteHTML(w, r, chttp.WriteHTMLParams{
+		PageTemplate: "signup.html",
+	})
+}
+
+func (ro *Router) HandleUserSignup(w http.ResponseWriter, r *http.Request) {
+	var (
+		id       = uuid.New().String()
+		email    = strings.TrimSpace(r.PostFormValue("email"))
+		password = strings.TrimSpace(r.PostFormValue("password"))
+	)
+
+	if email == "" || password == "" {
+		ro.rw.WriteHTMLError(w, r, cerrors.New(nil, "invalid signup details", map[string]interface{}{
+			"form": r.Form,
+		}))
+		return
+	}
+
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to hash password", map[string]interface{}{
+			"form": r.Form,
+		}))
+	}
+	passwordHash := string(hashedBytes)
+
+	err = ro.users.CreateUser(r.Context(), &users.User{
+		ID:           id,
+		Email:        email,
+		PasswordHash: passwordHash,
+	})
+	if err != nil {
+		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to create user", map[string]interface{}{
+			"form": r.Form,
+		}))
+	}
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (ro *Router) HandleUserSigninPage(w http.ResponseWriter, r *http.Request) {
+	ro.rw.WriteHTML(w, r, chttp.WriteHTMLParams{
+		PageTemplate: "signin.html",
+	})
+}
+
+func (ro *Router) HandleUserSignin(w http.ResponseWriter, r *http.Request) {
+	var (
+		email    = strings.TrimSpace(r.PostFormValue("email"))
+		password = strings.TrimSpace(r.PostFormValue("password"))
+	)
+
+	if email == "" || password == "" {
+		ro.rw.WriteHTMLError(w, r, cerrors.New(nil, "invalid signin details", map[string]interface{}{
+			"form": r.Form,
+		}))
+		return
+	}
+
+	user, err := ro.users.GetUserByEmail(r.Context(), email)
+	if err != nil {
+		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to get user", map[string]interface{}{
+			"form": r.Form,
+		}))
+		return
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
+	if err != nil {
+		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to compare password", map[string]interface{}{
+			"form": r.Form,
+		}))
+		return
+	}
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
