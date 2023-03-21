@@ -67,9 +67,18 @@ Submit
 
 <script type="text/javascript">
     let activeInputId = '';
+    let previousSearchResults = [];
+
+    {{ range .Keys }}
+    previousSearchResults.push('{{.}}');
+    {{end}}
 
     function showSearchBox(event, id) {
         document.addEventListener('keydown', (event) => {
+            const input = document.activeElement;
+            const cursorPos = input.selectionStart;
+            const lastChar = input.value[cursorPos - 1];
+
             if (event.ctrlKey && event.key === '/') {
                 event.preventDefault();
                 const input = document.getElementById(id);
@@ -81,6 +90,20 @@ Submit
                 searchBox.style.top = input.offsetTop + input.offsetHeight + 'px';
                 const searchInput = document.getElementById('search-input');
                 searchInput.focus();
+
+                // Check if previous search results exist and update search box with them
+                if (previousSearchResults.length > 0) {
+                    const list = document.getElementById('list');
+                    list.innerHTML = '';
+                    previousSearchResults.forEach((result) => {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = result;
+                        listItem.classList.add('inset-0', 'py-2', 'px-4', 'hover:bg-gray-100', 'cursor-pointer', 'text-black', 'z-20');
+                        listItem.onclick = selectItem;
+                        list.appendChild(listItem);
+                    });
+                }
+
                 searchInput.addEventListener('input', () => {
                     const filter = searchInput.value.toLowerCase();
                     const items = document.querySelectorAll('#list li');
@@ -93,17 +116,48 @@ Submit
                     });
                 });
             }
+
+            if (event.key === '.' && lastChar === '}') {
+                event.preventDefault();
+                const input = document.getElementById(id);
+                specialKeys = ['all', 'pretty', 'ip', 'json']
+                const searchBox = document.getElementById('search-box');
+                searchBox.classList.remove('hidden');
+                const list = document.getElementById('list');
+                list.innerHTML = ''; // Clear previous search results
+                specialKeys.forEach((result) => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = result;
+                    listItem.classList.add('inset-0', 'py-2', 'px-4', 'hover:bg-gray-100', 'cursor-pointer', 'text-black', 'z-20');
+                    listItem.onclick = selectSpecialItem;
+                    list.appendChild(listItem);
+                });
+            }
+
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                const searchBox = document.getElementById('search-box');
+                searchBox.classList.add('hidden');
+            }
         });
     }
 
     function selectItem(event) {
         const input = document.getElementById(activeInputId);
+        const cursorPos = input.selectionStart;
         const item = event.target.textContent.trim();
-        input.value += '\{\{' + item + '\}\}';
+        input.value = input.value.slice(0, cursorPos) + '\{\{' + item + '\}\}' + input.value.slice(cursorPos);
         const searchBox = document.getElementById('search-box');
         searchBox.classList.add('hidden');
     }
 
-
+    function selectSpecialItem(event) {
+        const input = document.getElementById(activeInputId);
+        const cursorPos = input.selectionStart;
+        const item = event.target.textContent.trim();
+        input.value = input.value.slice(0, cursorPos) + '.' + item + input.value.slice(cursorPos);
+        const searchBox = document.getElementById('search-box');
+        searchBox.classList.add('hidden');
+    }
 </script>
 {{ end}}
