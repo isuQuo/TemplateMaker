@@ -185,38 +185,16 @@ func (ro *Router) HandleSubmitSplitPage(w http.ResponseWriter, r *http.Request) 
 		Keys     []string
 	}
 
-	// Replace with file object
-	var jsonStr = `{
-		"name": "John Doe",
-		"age": 30,
-		"address": {
-		  "street": "123 Main St",
-		  "city": "Anytown",
-		  "state": "CA",
-		  "zip": "12345"
-		},
-		"phone_numbers": [
-		  {
-			"type": "home",
-			"number": "555-1234"
-		  },
-		  {
-			"type": "work",
-			"number": "555-5678"
-		  }
-		]
-	  }`
-
-	var jsonObject map[string]interface{}
-	if err := json.NewDecoder(strings.NewReader(jsonStr)).Decode(&jsonObject); err != nil {
-		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to decode json", map[string]interface{}{
+	jsonObject, err := logs.ImportJSONFile("test.json")
+	if err != nil {
+		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to import log", map[string]interface{}{
 			"form": r.Form,
 		}))
 		return
 	}
 
 	kv := make(map[string]string)
-	err := logs.ExtractKeyValues("", jsonObject, &kv)
+	err = logs.ExtractKeyValues("", jsonObject, &kv)
 	if err != nil {
 		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to extract log", map[string]interface{}{
 			"form": r.Form,
@@ -261,31 +239,9 @@ func (ro *Router) HandleEditSplitPage(w http.ResponseWriter, r *http.Request) {
 		Keys     []string
 	}
 
-	// Replace with file object
-	var jsonStr = `{
-		"name": "John Doe",
-		"age": 30,
-		"address": {
-		  "street": "123 Main St",
-		  "city": "Anytown",
-		  "state": "CA",
-		  "zip": "12345"
-		},
-		"phone_numbers": [
-		  {
-			"type": "home",
-			"number": "555-1234"
-		  },
-		  {
-			"type": "work",
-			"number": "555-5678"
-		  }
-		]
-	  }`
-
-	var jsonObject map[string]interface{}
-	if err := json.NewDecoder(strings.NewReader(jsonStr)).Decode(&jsonObject); err != nil {
-		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to decode json", map[string]interface{}{
+	jsonObject, err := logs.ImportJSONFile("test.json")
+	if err != nil {
+		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to import log", map[string]interface{}{
 			"form": r.Form,
 		}))
 		return
