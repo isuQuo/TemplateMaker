@@ -19,7 +19,6 @@ type Queries struct {
 	querier csql.Querier
 }
 
-// Here are some example queries that use Querier to unmarshal results into Go strcuts
 func (q *Queries) ListTemplates(ctx context.Context) ([]Template, error) {
 	const query = "SELECT * FROM templates;"
 

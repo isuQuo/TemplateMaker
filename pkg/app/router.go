@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/gocopper/copper/cerrors"
 	"github.com/gocopper/copper/chttp"
 	"github.com/gocopper/copper/clogger"
+	"github.com/isuquo/copper-test/pkg/logs"
 	"github.com/isuquo/copper-test/pkg/templates"
 )
 
@@ -177,35 +179,14 @@ func (ro *Router) HandleEditTemplate(w http.ResponseWriter, r *http.Request) {
 
 // TODO: Parse Log and write JSON object to writer
 func (ro *Router) HandleSubmitSplitPage(w http.ResponseWriter, r *http.Request) {
-	var jsonObject = `{
-	"Log": "RETURNING LOG"
-}`
-
-	ro.rw.WriteHTML(w, r, chttp.WriteHTMLParams{
-		PageTemplate: "submit-split.html",
-		Data: map[string]interface{}{
-			"Log": jsonObject,
-		},
-	})
-}
-
-func (ro *Router) HandleEditSplitPage(w http.ResponseWriter, r *http.Request) {
-	id := string(chttp.URLParams(r)["id"])
-	template, err := ro.templates.GetTemplateByID(r.Context(), id)
-	if err != nil {
-		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to get template", map[string]interface{}{
-			"form": r.Form,
-		}))
-		return
-	}
-
 	type TemplateData struct {
 		Template templates.Template
-		Log      map[string]interface{}
+		Log      string
+		Keys     []string
 	}
 
 	// Replace with file object
-	var jsonObject = `{
+	var jsonStr = `{
 		"name": "John Doe",
 		"age": 30,
 		"address": {
@@ -226,9 +207,113 @@ func (ro *Router) HandleEditSplitPage(w http.ResponseWriter, r *http.Request) {
 		]
 	  }`
 
+	var jsonObject map[string]interface{}
+	if err := json.NewDecoder(strings.NewReader(jsonStr)).Decode(&jsonObject); err != nil {
+		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to decode json", map[string]interface{}{
+			"form": r.Form,
+		}))
+		return
+	}
+
+	kv := make(map[string]string)
+	err := logs.ExtractKeyValues("", jsonObject, &kv)
+	if err != nil {
+		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to extract log", map[string]interface{}{
+			"form": r.Form,
+		}))
+		return
+	}
+
+	kvi, err := json.MarshalIndent(&kv, "", "\t")
+	if err != nil {
+		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to marshal log", map[string]interface{}{
+			"form": r.Form,
+		}))
+		return
+	}
+
+	keys := logs.ExtractKeys(kv)
+
+	data := TemplateData{
+		Log:  string(kvi),
+		Keys: keys,
+	}
+
+	ro.rw.WriteHTML(w, r, chttp.WriteHTMLParams{
+		PageTemplate: "submit-split.html",
+		Data:         data,
+	})
+}
+
+func (ro *Router) HandleEditSplitPage(w http.ResponseWriter, r *http.Request) {
+	id := string(chttp.URLParams(r)["id"])
+	template, err := ro.templates.GetTemplateByID(r.Context(), id)
+	if err != nil {
+		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to get template", map[string]interface{}{
+			"form": r.Form,
+		}))
+		return
+	}
+
+	type TemplateData struct {
+		Template templates.Template
+		Log      string
+		Keys     []string
+	}
+
+	// Replace with file object
+	var jsonStr = `{
+		"name": "John Doe",
+		"age": 30,
+		"address": {
+		  "street": "123 Main St",
+		  "city": "Anytown",
+		  "state": "CA",
+		  "zip": "12345"
+		},
+		"phone_numbers": [
+		  {
+			"type": "home",
+			"number": "555-1234"
+		  },
+		  {
+			"type": "work",
+			"number": "555-5678"
+		  }
+		]
+	  }`
+
+	var jsonObject map[string]interface{}
+	if err := json.NewDecoder(strings.NewReader(jsonStr)).Decode(&jsonObject); err != nil {
+		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to decode json", map[string]interface{}{
+			"form": r.Form,
+		}))
+		return
+	}
+
+	kv := make(map[string]string)
+	err = logs.ExtractKeyValues("", jsonObject, &kv)
+	if err != nil {
+		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to extract log", map[string]interface{}{
+			"form": r.Form,
+		}))
+		return
+	}
+
+	kvi, err := json.MarshalIndent(&kv, "", "\t")
+	if err != nil {
+		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to marshal log", map[string]interface{}{
+			"form": r.Form,
+		}))
+		return
+	}
+
+	keys := logs.ExtractKeys(kv)
+
 	data := TemplateData{
 		Template: *template,
-		Log:      map[string]interface{}{"Log": jsonObject},
+		Log:      string(kvi),
+		Keys:     keys,
 	}
 
 	ro.rw.WriteHTML(w, r, chttp.WriteHTMLParams{
