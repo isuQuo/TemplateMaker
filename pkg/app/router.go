@@ -72,9 +72,9 @@ func (ro *Router) Routes() []chttp.Route {
 		},
 
 		{
-			Path:    "/submit-split",
+			Path:    "/split",
 			Methods: []string{http.MethodGet},
-			Handler: ro.HandleSubmitSplitPage,
+			Handler: ro.Split,
 		},
 
 		{
@@ -126,7 +126,7 @@ func (ro *Router) HandleSubmitTemplate(w http.ResponseWriter, r *http.Request) {
 		name           = strings.TrimSpace(r.PostFormValue("name"))
 		subject        = strings.TrimSpace(r.PostFormValue("subject"))
 		description    = strings.TrimSpace(r.PostFormValue("description"))
-		assessment     = strings.TrimSpace(r.PostFormValue("assessment"))
+		assessment     = strings.Join(r.Form["assessment"], "{{EOA}}")
 		recommendation = strings.TrimSpace(r.PostFormValue("recommendation"))
 	)
 
@@ -165,9 +165,21 @@ func (ro *Router) HandleEditPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	type TemplateData struct {
+		Template   templates.Template
+		Assessment []string
+	}
+
+	assessment := strings.Split(template.Assessment, "{{EOA}}")
+
+	data := TemplateData{
+		Template:   *template,
+		Assessment: assessment,
+	}
+
 	ro.rw.WriteHTML(w, r, chttp.WriteHTMLParams{
 		PageTemplate: "edit.html",
-		Data:         template,
+		Data:         data,
 	})
 }
 
@@ -207,13 +219,7 @@ func (ro *Router) HandleEditTemplate(w http.ResponseWriter, r *http.Request) {
 }
 
 // TODO: Parse Log and write JSON object to writer
-func (ro *Router) HandleSubmitSplitPage(w http.ResponseWriter, r *http.Request) {
-	type TemplateData struct {
-		Template templates.Template
-		Log      string
-		Keys     []string
-	}
-
+func (ro *Router) Split(w http.ResponseWriter, r *http.Request) {
 	jsonObject, err := logs.ImportJSONFile("test.json")
 	if err != nil {
 		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to import log", map[string]interface{}{
@@ -240,15 +246,13 @@ func (ro *Router) HandleSubmitSplitPage(w http.ResponseWriter, r *http.Request) 
 	}
 
 	keys := logs.ExtractKeys(kv)
+	specialKeys := logs.SpecialKeys
 
-	data := TemplateData{
-		Log:  string(kvi),
-		Keys: keys,
-	}
-
-	ro.rw.WriteHTML(w, r, chttp.WriteHTMLParams{
-		PageTemplate: "submit-split.html",
-		Data:         data,
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"keys":     keys,
+		"jsonData": string(kvi),
+		"special":  specialKeys,
 	})
 }
 
