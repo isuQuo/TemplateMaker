@@ -66,12 +66,6 @@ func (ro *Router) Routes() []chttp.Route {
 		},
 
 		{
-			Path:    "/edit-split/{id}",
-			Methods: []string{http.MethodGet},
-			Handler: ro.HandleEditSplitPage,
-		},
-
-		{
 			Path:    "/split",
 			Methods: []string{http.MethodGet},
 			Handler: ro.Split,
@@ -189,7 +183,7 @@ func (ro *Router) HandleEditTemplate(w http.ResponseWriter, r *http.Request) {
 		name           = strings.TrimSpace(r.PostFormValue("name"))
 		subject        = strings.TrimSpace(r.PostFormValue("subject"))
 		description    = strings.TrimSpace(r.PostFormValue("description"))
-		assessment     = strings.TrimSpace(r.PostFormValue("assessment"))
+		assessment     = strings.Join(r.Form["assessment"], "{{EOA}}")
 		recommendation = strings.TrimSpace(r.PostFormValue("recommendation"))
 	)
 
@@ -253,61 +247,6 @@ func (ro *Router) Split(w http.ResponseWriter, r *http.Request) {
 		"keys":     keys,
 		"jsonData": string(kvi),
 		"special":  specialKeys,
-	})
-}
-
-func (ro *Router) HandleEditSplitPage(w http.ResponseWriter, r *http.Request) {
-	id := string(chttp.URLParams(r)["id"])
-	template, err := ro.templates.GetTemplateByID(r.Context(), id)
-	if err != nil {
-		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to get template", map[string]interface{}{
-			"form": r.Form,
-		}))
-		return
-	}
-
-	type TemplateData struct {
-		Template templates.Template
-		Log      string
-		Keys     []string
-	}
-
-	jsonObject, err := logs.ImportJSONFile("test.json")
-	if err != nil {
-		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to import log", map[string]interface{}{
-			"form": r.Form,
-		}))
-		return
-	}
-
-	kv := make(map[string]string)
-	err = logs.ExtractKeyValues("", jsonObject, &kv)
-	if err != nil {
-		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to extract log", map[string]interface{}{
-			"form": r.Form,
-		}))
-		return
-	}
-
-	kvi, err := json.MarshalIndent(&kv, "", "\t")
-	if err != nil {
-		ro.rw.WriteHTMLError(w, r, cerrors.New(err, "failed to marshal log", map[string]interface{}{
-			"form": r.Form,
-		}))
-		return
-	}
-
-	keys := logs.ExtractKeys(kv)
-
-	data := TemplateData{
-		Template: *template,
-		Log:      string(kvi),
-		Keys:     keys,
-	}
-
-	ro.rw.WriteHTML(w, r, chttp.WriteHTMLParams{
-		PageTemplate: "edit-split.html",
-		Data:         data,
 	})
 }
 

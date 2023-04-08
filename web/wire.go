@@ -2,6 +2,7 @@ package web
 
 import (
 	"embed"
+	"encoding/json"
 	"net/http"
 
 	"github.com/gocopper/copper/cerrors"
@@ -30,6 +31,20 @@ func HTMLRenderFuncs(q *templates.Queries) []chttp.HTMLRenderFunc {
 						groups[t.Name] = append(groups[t.Name], t)
 					}
 					return groups, nil
+				}
+			},
+		},
+		{
+			Name: "json",
+			Func: func(r *http.Request) any {
+				return func(v interface{}) (string, error) {
+					b, err := json.Marshal(v)
+					if err != nil {
+						return "", cerrors.New(err, "failed to marshal json", map[string]interface{}{
+							"request": err,
+						})
+					}
+					return string(b), nil
 				}
 			},
 		},

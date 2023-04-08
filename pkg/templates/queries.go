@@ -3,6 +3,7 @@ package templates
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/gocopper/copper/csql"
 )
@@ -47,7 +48,6 @@ func (q *Queries) SaveTemplate(ctx context.Context, template *Template) error {
 	VALUES (?, ?, ?, ?, ?, ?)`
 	//ON CONFLICT (id) DO UPDATE SET name=?, subject=?, description=?, assessment=?, recommendation=?`
 
-	//assessment := strings.Split(template.Assessment, "{{EOA}}")
 	_, err := q.querier.Exec(ctx, query,
 		template.ID,
 		template.Name,
@@ -65,6 +65,8 @@ func (q *Queries) EditTemplate(ctx context.Context, template *Template) error {
 	UPDATE templates
 	SET name=?, subject=?, description=?, assessment=?, recommendation=?
 	WHERE id=?`
+
+	fmt.Println("==", template.Assessment)
 
 	_, err := q.querier.Exec(ctx, query,
 		template.Name,
