@@ -47,6 +47,7 @@ func (q *Queries) SaveTemplate(ctx context.Context, template *Template) error {
 	VALUES (?, ?, ?, ?, ?, ?)`
 	//ON CONFLICT (id) DO UPDATE SET name=?, subject=?, description=?, assessment=?, recommendation=?`
 
+	//assessment := strings.Split(template.Assessment, "{{EOA}}")
 	_, err := q.querier.Exec(ctx, query,
 		template.ID,
 		template.Name,
