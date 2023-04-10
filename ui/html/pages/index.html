@@ -1,0 +1,47 @@
+{{define "content"}}
+<section class="bg-gray-900 py-20">
+    <div class="container mx-auto">
+        {{with .Templates}}
+        <h2 class="text-4xl font-bold mb-8 text-white">Templates</h2>
+        {{else}}
+        <h2 class="text-4xl font-bold mb-8 text-white">No Templates found</h2>
+        {{end}}
+        <div class="flex flex-wrap -mx-4">
+            <div class="w-full md:w-1/2 px-4 mb-8">
+                <div class="flex-col space-y-2">
+                    {{range $name, $templates := .Templates}}
+                    <div class="flex space-x-0.5 text-sm text-neutral-400">
+                        <div>
+                            <details class="bg-gray-300 duration-300 w-full">
+                                <summary class="bg-inherit px-5 py-3 text-lg cursor-pointer text-black">{{$name}}
+                                    (click to expand)</summary>
+                                {{range $templates}}
+                                <div class="bg-white px-5 py-3 border border-gray-300 text-sm font-light">
+                                    <div class="bg-white px-5 py-3 border border-gray-300 text-sm font-light">
+                                        <div class="flex items-center">
+                                            <div class="leading-1 text-[35px] text-green-600 flex-grow">{{.Subject}}</div>
+                                            <a href="/template/view/{{.ID}}"
+                                                class="ml-2 py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-md shadow-md inline-block text-sm">View</a>
+                                            <a href="/template/edit/{{.ID}}"
+                                                class="ml-2 py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-md shadow-md inline-block text-sm">Edit</a>
+                                            <a href="/template/send/{{.ID}}"
+                                                class="ml-2 py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-md shadow-md inline-block text-sm">Send</a>
+                                            <form action="/template/delete/{{.ID}}" method="post" id="deleteForm" class="ml-2">
+                                                <button type="submit"
+                                                    class="py-2 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-md shadow-md"
+                                                    onclick="return confirm('Are you sure you want to delete this template?');">Delete</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                {{end}}
+                            </details>
+                        </div>
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{{end}}

@@ -1,24 +1,16 @@
-module github.com/isuquo/copper-test
+module github.com/isuquo/templatemaker
 
 go 1.20
 
 require (
-	github.com/gocopper/copper v0.7.2
-	github.com/google/uuid v1.1.2
-	github.com/google/wire v0.5.0
-	github.com/mattn/go-sqlite3 v1.14.12
-	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
+	github.com/alexedwards/scs/mysqlstore v0.0.0-20230327161757-10d4299e3b24
+	github.com/alexedwards/scs/v2 v2.5.1
+	github.com/go-playground/form/v4 v4.2.0
+	github.com/go-sql-driver/mysql v1.7.0
+	github.com/julienschmidt/httprouter v1.3.0
+	github.com/justinas/alice v1.2.0
+	github.com/justinas/nosurf v1.1.1
+	golang.org/x/crypto v0.8.0
 )
 
-require (
-	github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf // indirect
-	github.com/go-gorp/gorp/v3 v3.0.2 // indirect
-	github.com/gorilla/context v1.1.1 // indirect
-	github.com/gorilla/mux v1.6.2 // indirect
-	github.com/jmoiron/sqlx v1.3.5 // indirect
-	github.com/pelletier/go-toml v1.9.3 // indirect
-	github.com/rubenv/sql-migrate v1.1.2 // indirect
-	go.uber.org/atomic v1.7.0 // indirect
-	go.uber.org/multierr v1.6.0 // indirect
-	go.uber.org/zap v1.21.0 // indirect
-)
+require github.com/google/uuid v1.3.0
