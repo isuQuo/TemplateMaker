@@ -51,6 +51,16 @@ Edit
                 class="w-full py-2 px-4 border border-black-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-black"
                 placeholder="Enter your recommendations">{{.Template.Recommendation}}</textarea>
         </div>
+
+        {{if .Template.Query}}
+            <div class="mb-4">
+                <label for="query" class="block text-black-700 font-bold mb-2">Query:</label>
+                <textarea name="query" id="query"
+                    class="w-full py-2 px-4 border border-black-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-black"
+                    placeholder="Enter your query">{{.Template.Query}}</textarea>
+            </div>
+        {{end}}
+
         <div class="flex flex-row justify-between">
             <button type="button" onclick="importLog()"
                 class="py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-md shadow-md">Import
@@ -272,6 +282,17 @@ Edit
             searchBox.classList.add('hidden');
             input.focus();
             input.setSelectionRange(cursorPos + item.length + 1, cursorPos + item.length + 1);
+        }
+    }
+
+    function toggleQueryTextarea() {
+        var checkbox = document.getElementById('showQueryCheckbox');
+        var queryField = document.getElementById('queryField');
+        
+        if (checkbox.checked) {
+            queryField.style.display = "block";
+        } else {
+            queryField.style.display = "none";
         }
     }
 </script>

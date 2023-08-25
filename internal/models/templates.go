@@ -12,6 +12,7 @@ type Template struct {
 	Description    string
 	Assessment     string
 	Recommendation string
+	Query          sql.NullString
 	UserID         string
 }
 
@@ -32,7 +33,7 @@ func (m *TemplateModel) SelectAll(userId string) ([]*Template, error) {
 
 	for rows.Next() {
 		s := &Template{}
-		err = rows.Scan(&s.ID, &s.Name, &s.Subject, &s.Description, &s.Assessment, &s.Recommendation, &s.UserID)
+		err = rows.Scan(&s.ID, &s.Name, &s.Subject, &s.Description, &s.Assessment, &s.Recommendation, &s.Query, &s.UserID)
 		if err != nil {
 			return nil, err
 		}
@@ -48,8 +49,8 @@ func (m *TemplateModel) SelectAll(userId string) ([]*Template, error) {
 
 func (m *TemplateModel) Insert(template *Template) error {
 	const query = `
-	INSERT INTO templates (id, name, subject, description, assessment, recommendation, user_id)
-	VALUES (?, ?, ?, ?, ?, ?, ?)`
+	INSERT INTO templates (id, name, subject, description, assessment, recommendation, query, user_id)
+	VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
 
 	// Use the Exec() method on the embedded connection pool to execute our
 	_, err := m.DB.Exec(query,
@@ -59,6 +60,7 @@ func (m *TemplateModel) Insert(template *Template) error {
 		template.Description,
 		template.Assessment,
 		template.Recommendation,
+		template.Query,
 		template.UserID,
 	)
 
@@ -68,7 +70,7 @@ func (m *TemplateModel) Insert(template *Template) error {
 func (m *TemplateModel) Update(template *Template) error {
 	const query = `
 	UPDATE templates
-	SET name=?, subject=?, description=?, assessment=?, recommendation=?
+	SET name=?, subject=?, description=?, assessment=?, recommendation=?, query=?
 	WHERE id=?`
 
 	_, err := m.DB.Exec(query,
@@ -77,6 +79,7 @@ func (m *TemplateModel) Update(template *Template) error {
 		template.Description,
 		template.Assessment,
 		template.Recommendation,
+		template.Query,
 		template.ID,
 	)
 	return err
@@ -87,7 +90,7 @@ func (m *TemplateModel) Get(id string) (*Template, error) {
 
 	s := &Template{}
 
-	err := m.DB.QueryRow(query, id).Scan(&s.ID, &s.Name, &s.Subject, &s.Description, &s.Assessment, &s.Recommendation, &s.UserID)
+	err := m.DB.QueryRow(query, id).Scan(&s.ID, &s.Name, &s.Subject, &s.Description, &s.Assessment, &s.Recommendation, &s.Query, &s.UserID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrNoRecord

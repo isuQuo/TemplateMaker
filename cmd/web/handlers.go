@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -19,6 +20,7 @@ type templateCreateForm struct {
 	Description         string   `form:"description"`
 	Assessment          []string `form:"assessment"`
 	Recommendation      string   `form:"recommendation"`
+	Query               string   `form:"query"`
 	validator.Validator `form:"-"`
 }
 
@@ -87,7 +89,11 @@ func (app *application) templateCreatePost(w http.ResponseWriter, r *http.Reques
 		Description:    form.Description,
 		Assessment:     strings.Join(form.Assessment, "{{EOA}}"),
 		Recommendation: form.Recommendation,
-		UserID:         app.getUserID(r),
+		Query: sql.NullString{
+			String: form.Query,
+			Valid:  form.Query != "",
+		},
+		UserID: app.getUserID(r),
 	}
 
 	// Insert the template data in the database.
@@ -168,7 +174,11 @@ func (app *application) templateEditPost(w http.ResponseWriter, r *http.Request)
 		Description:    form.Description,
 		Assessment:     strings.Join(form.Assessment, "{{EOA}}"),
 		Recommendation: form.Recommendation,
-		UserID:         app.getUserID(r),
+		Query: sql.NullString{
+			String: form.Query,
+			Valid:  form.Query != "",
+		},
+		UserID: app.getUserID(r),
 	}
 
 	// Update the template data in the database.

@@ -12,6 +12,7 @@ CREATE TABLE templates (
     description TEXT NOT NULL,
     assessment TEXT NOT NULL,
     recommendation TEXT NOT NULL,
+    query TEXT NULL,
     user_id CHAR(36) NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
