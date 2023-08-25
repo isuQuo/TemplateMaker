@@ -53,11 +53,13 @@ Edit
         </div>
 
         {{if .Template.Query}}
-            <div class="mb-4">
-                <label for="query" class="block text-black-700 font-bold mb-2">Query:</label>
-                <textarea name="query" id="query"
-                    class="w-full py-2 px-4 border border-black-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-black"
-                    placeholder="Enter your query">{{.Template.Query}}</textarea>
+            <div id="queryFieldsContainer">
+                <div class="queryField mb-4">
+                    <label for="query-0" class="block text-black-700 font-bold mb-2">Query:</label>
+                    <textarea name="query" id="query-0" onkeydown="showSearchBox(event, id)"
+                        class="w-full py-2 px-4 border border-black-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-black"
+                        placeholder="Enter your query"></textarea>
+                </div>
             </div>
         {{end}}
 
@@ -78,14 +80,21 @@ Edit
 
 {{with .Template}}
 <script>
+    let fieldCount = 1;
+
     window.assessmentLength = "{{len $.Assessment}}";
     window.assessmentValues = JSON.parse('{{$.Assessment | json}}');
+    window.queryLength = "{{len $.Query}}";
+    window.queryValues = JSON.parse('{{$.Query | json}}');
 
     window.addEventListener('DOMContentLoaded', (event) => {
         document.getElementById("assessment-0").value = assessmentValues[0];
+        document.getElementById("query-0").value = queryValues[0];
         if (assessmentLength > 1) {
             for (let i = 1; i < assessmentLength; i++) {
-                extendFields(assessmentValues[i]);
+                extendAssessmentFields(assessmentValues[i]);
+                extendQueryFields(queryValues[i]);
+                fieldCount++;
             }
         }
     });
@@ -95,7 +104,6 @@ Edit
 <script>
     let activeInputId = '';
     let previousSearchResults = [];
-    let assessmentFieldCount = 1;
 
     function importLog() {
         fetch('/split')
@@ -116,9 +124,15 @@ Edit
             .catch(error => console.error('Error fetching JSON data:', error));
     }
 
-    function extendFields(initialValue = '') {
+    function extendFields() {
+        extendAssessmentFields();
+        extendQueryFields();
+    }
+
+    function extendAssessmentFields(initialValue = '') {
         const assessmentField = document.createElement("div");
         assessmentField.classList.add("assessmentField", "mb-4");
+        assessmentField.setAttribute('data-group-id', fieldCount);
         
         const labelAndRemoveButtonWrapper = document.createElement("div");
         labelAndRemoveButtonWrapper.classList.add("flex", "justify-between", "items-center");
@@ -126,7 +140,7 @@ Edit
     
         const label = document.createElement("label");
         label.textContent = "Assessment:";
-        label.htmlFor = "assessment-" + assessmentFieldCount;
+        label.htmlFor = "assessment-" + fieldCount;
         label.classList.add("block", "text-black-700", "font-bold", "mb-2");
         labelAndRemoveButtonWrapper.appendChild(label);
     
@@ -135,13 +149,17 @@ Edit
         removeButton.type = "button";
         removeButton.classList.add("py-2", "px-3", "bg-red-600");
         removeButton.addEventListener("click", function () {
-            assessmentField.remove();
+            const groupId = assessmentField.getAttribute('data-group-id');
+            console.log("Removing group ID:", groupId); // Let's add a log to ensure we're getting the correct ID
+            removeFieldGroup(groupId);
         });
+
+
         labelAndRemoveButtonWrapper.appendChild(removeButton);
     
         const textarea = document.createElement("textarea");
         textarea.name = "assessment";
-        textarea.id = "assessment-" + assessmentFieldCount;
+        textarea.id = "assessment-" + fieldCount;
         textarea.classList.add("w-full", "py-2", "px-4", "border", "border-black-300", "rounded-md", "shadow-sm", "focus:outline-none", "focus:ring-green-500", "focus:border-green-500", "text-black");
         textarea.placeholder = "Enter your assessment";
         textarea.onkeydown = function (event) {
@@ -155,9 +173,41 @@ Edit
         }
     
         document.getElementById("assessmentFieldsContainer").appendChild(assessmentField);
-    
-        assessmentFieldCount++;
     }
+
+    function extendQueryFields(initialValue = '') {
+        const queryField = document.createElement("div");
+        queryField.classList.add("queryField", "mb-4");
+        queryField.setAttribute('data-group-id', fieldCount);
+
+        const queryLabel = document.createElement("label");
+        queryLabel.textContent = "Query:";
+        queryLabel.htmlFor = "query-" + fieldCount;
+        queryLabel.classList.add("block", "text-black-700", "font-bold", "mb-2");
+        queryField.appendChild(queryLabel);
+
+        const queryTextarea = document.createElement("textarea");
+        queryTextarea.name = "query";
+        queryTextarea.id = "query-" + fieldCount;
+        queryTextarea.classList.add("w-full", "py-2", "px-4", "border", "border-black-300", "rounded-md", "shadow-sm", "focus:outline-none", "focus:ring-green-500", "focus:border-green-500", "text-black");
+        queryTextarea.placeholder = "Enter your query";
+        queryField.appendChild(queryTextarea);
+
+        if (initialValue) {
+            queryTextarea.value = initialValue;
+        }
+
+        document.getElementById("queryFieldsContainer").appendChild(queryField);
+    }
+
+    function removeFieldGroup(groupId) {
+        const assessmentFieldToRemove = document.querySelector(`.assessmentField[data-group-id="${groupId}"]`);
+        const queryFieldToRemove = document.querySelector(`.queryField[data-group-id="${groupId}"]`);
+
+        if (assessmentFieldToRemove) assessmentFieldToRemove.remove();
+        if (queryFieldToRemove) queryFieldToRemove.remove();
+    }
+
 
     function showSearchBox(event, id) {
         document.addEventListener('keydown', handleKeyDown);

@@ -19,6 +19,7 @@ type templateData struct {
 	IsAuthenticated bool
 	CSRFToken       string
 	Assessment      []string
+	Query           []string
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {

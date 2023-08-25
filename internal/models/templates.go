@@ -12,7 +12,7 @@ type Template struct {
 	Description    string
 	Assessment     string
 	Recommendation string
-	Query          sql.NullString
+	Query          string
 	UserID         string
 }
 

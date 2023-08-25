@@ -39,12 +39,18 @@ View
             class="w-full py-2 px-4 border border-black-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-black"
             placeholder="Enter your recommendations">{{.Template.Recommendation}}</textarea>
     </div>
-    <div class="mb-4">
-        <label for="query" class="block text-black-700 font-bold mb-2">Query:</label>
-        <textarea name="query" id="query" disabled
-            class="w-full py-2 px-4 border border-black-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-black"
-            placeholder="Enter your query">{{.Template.Query}}</textarea>
-    </div>
+    
+    {{if .Template.Query}}
+        <div id="queryFieldsContainer">
+            <div class="queryField mb-4">
+                <label for="query-0" class="block text-black-700 font-bold mb-2">Query:</label>
+                <textarea name="query" id="query-0" disabled
+                    class="w-full py-2 px-4 border border-black-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-black"
+                    placeholder="Enter your query"></textarea>
+            </div>
+        </div>
+    {{end}}
+
     <div class="flex flex-row justify-between">
         <button type="button" onclick="location.href='/template/edit/{{.Template.ID}}'"
             class="py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-md shadow-md">Edit</button>
@@ -60,14 +66,21 @@ View
 
 {{with .Template}}
 <script>
+    let fieldCount = 1;
+
     window.assessmentLength = "{{len $.Assessment}}";
     window.assessmentValues = JSON.parse('{{$.Assessment | json}}');
+    window.queryLength = "{{len $.Query}}";
+    window.queryValues = JSON.parse('{{$.Query | json}}');
 
     window.addEventListener('DOMContentLoaded', (event) => {
         document.getElementById("assessment-0").value = assessmentValues[0];
+        document.getElementById("query-0").value = queryValues[0];
         if (assessmentLength > 1) {
             for (let i = 1; i < assessmentLength; i++) {
-                extendFields(assessmentValues[i]);
+                extendAssessmentFields(assessmentValues[i]);
+                extendQueryFields(queryValues[i]);
+                fieldCount++;
             }
         }
     });
@@ -75,11 +88,10 @@ View
 {{end}}
 
 <script>
-    let assessmentFieldCount = 1;
-
-    function extendFields(initialValue = '') {
+    function extendAssessmentFields(initialValue = '') {
         const assessmentField = document.createElement("div");
         assessmentField.classList.add("assessmentField", "mb-4");
+        assessmentField.setAttribute('data-group-id', fieldCount);
         
         const labelAndRemoveButtonWrapper = document.createElement("div");
         labelAndRemoveButtonWrapper.classList.add("flex", "justify-between", "items-center");
@@ -87,20 +99,20 @@ View
     
         const label = document.createElement("label");
         label.textContent = "Assessment:";
-        label.htmlFor = "assessment-" + assessmentFieldCount;
+        label.htmlFor = "assessment-" + fieldCount;
         label.classList.add("block", "text-black-700", "font-bold", "mb-2");
         labelAndRemoveButtonWrapper.appendChild(label);
     
         const textarea = document.createElement("textarea");
+        textarea.disabled = true;
         textarea.name = "assessment";
-        textarea.id = "assessment-" + assessmentFieldCount;
+        textarea.id = "assessment-" + fieldCount;
         textarea.classList.add("w-full", "py-2", "px-4", "border", "border-black-300", "rounded-md", "shadow-sm", "focus:outline-none", "focus:ring-green-500", "focus:border-green-500", "text-black");
         textarea.placeholder = "Enter your assessment";
         textarea.onkeydown = function (event) {
             console.log(this.id, textarea.id)
             showSearchBox(event, this.id);
         };
-        textarea.disabled = true;
         assessmentField.appendChild(textarea);
 
         if (initialValue) {
@@ -108,8 +120,32 @@ View
         }
     
         document.getElementById("assessmentFieldsContainer").appendChild(assessmentField);
-    
-        assessmentFieldCount++;
+    }
+
+    function extendQueryFields(initialValue = '') {
+        const queryField = document.createElement("div");
+        queryField.classList.add("queryField", "mb-4");
+        queryField.setAttribute('data-group-id', fieldCount);
+
+        const queryLabel = document.createElement("label");
+        queryLabel.textContent = "Query:";
+        queryLabel.htmlFor = "query-" + fieldCount;
+        queryLabel.classList.add("block", "text-black-700", "font-bold", "mb-2");
+        queryField.appendChild(queryLabel);
+
+        const queryTextarea = document.createElement("textarea");
+        queryTextarea.disabled = true;
+        queryTextarea.name = "query";
+        queryTextarea.id = "query-" + fieldCount;
+        queryTextarea.classList.add("w-full", "py-2", "px-4", "border", "border-black-300", "rounded-md", "shadow-sm", "focus:outline-none", "focus:ring-green-500", "focus:border-green-500", "text-black");
+        queryTextarea.placeholder = "Enter your query";
+        queryField.appendChild(queryTextarea);
+
+        if (initialValue) {
+            queryTextarea.value = initialValue;
+        }
+
+        document.getElementById("queryFieldsContainer").appendChild(queryField);
     }
 </script>
 {{end}}

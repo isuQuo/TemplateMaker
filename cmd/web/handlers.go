@@ -20,7 +20,7 @@ type templateCreateForm struct {
 	Description         string   `form:"description"`
 	Assessment          []string `form:"assessment"`
 	Recommendation      string   `form:"recommendation"`
-	Query               string   `form:"query"`
+	Query               []string `form:"query"`
 	validator.Validator `form:"-"`
 }
 
@@ -90,9 +90,9 @@ func (app *application) templateCreatePost(w http.ResponseWriter, r *http.Reques
 		Assessment:     strings.Join(form.Assessment, "{{EOA}}"),
 		Recommendation: form.Recommendation,
 		Query: sql.NullString{
-			String: form.Query,
-			Valid:  form.Query != "",
-		},
+			String: strings.Join(form.Query, "{{EOA}}"),
+			Valid:  form.Query != nil,
+		}.String,
 		UserID: app.getUserID(r),
 	}
 
@@ -129,10 +129,12 @@ func (app *application) templateEditForm(w http.ResponseWriter, r *http.Request)
 	}
 
 	assessments := strings.Split(template.Assessment, "{{EOA}}")
+	queries := strings.Split(template.Query, "{{EOA}}")
 
 	data := app.newTemplateData(r)
 	data.Template = template
 	data.Assessment = assessments
+	data.Query = queries
 
 	app.render(w, http.StatusOK, "edit.html", data)
 }
@@ -175,9 +177,9 @@ func (app *application) templateEditPost(w http.ResponseWriter, r *http.Request)
 		Assessment:     strings.Join(form.Assessment, "{{EOA}}"),
 		Recommendation: form.Recommendation,
 		Query: sql.NullString{
-			String: form.Query,
-			Valid:  form.Query != "",
-		},
+			String: strings.Join(form.Query, "{{EOA}}"),
+			Valid:  form.Query != nil,
+		}.String,
 		UserID: app.getUserID(r),
 	}
 
@@ -212,10 +214,12 @@ func (app *application) templateViewForm(w http.ResponseWriter, r *http.Request)
 	}
 
 	assessments := strings.Split(template.Assessment, "{{EOA}}")
+	queries := strings.Split(template.Query, "{{EOA}}")
 
 	data := app.newTemplateData(r)
 	data.Template = template
 	data.Assessment = assessments
+	data.Query = queries
 
 	app.render(w, http.StatusOK, "view.html", data)
 }

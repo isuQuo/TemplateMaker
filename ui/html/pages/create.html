@@ -58,14 +58,18 @@ Submit
         </div>
 
         <div class="mb-4">
-            <input type="checkbox" id="showQueryCheckbox" onclick="toggleQueryTextarea()"> Show Query Textarea
+            <label>
+                <input type="checkbox" id="showQueryCheckbox" onclick="toggleQueryVisibility()"> Show Query Fields
+            </label>
         </div>
 
-        <div id="queryField" class="mb-4" style="display: none;">
-            <label for="query" class="block text-black-700 font-bold mb-2">Query:</label>
-            <textarea name="query" id="query"
-                class="w-full py-2 px-4 border border-black-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-black"
-                placeholder="Enter your query"></textarea>
+        <div id="queryFieldsContainer" style="display:none;">
+            <div class="queryField mb-4">
+                <label for="query-0" class="block text-black-700 font-bold mb-2">Query:</label>
+                <textarea name="query" id="query-0" onkeydown="showSearchBox(event, id)"
+                    class="w-full py-2 px-4 border border-black-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-black"
+                    placeholder="Enter your query"></textarea>
+            </div>
         </div>
 
         <div class="flex flex-row justify-between">
@@ -86,7 +90,7 @@ Submit
 <script>
     let activeInputId = '';
     let previousSearchResults = [];
-    let assessmentFieldCount = 1;
+    let fieldCount = 1;
 
     function importLog() {
         fetch('/split')
@@ -108,7 +112,13 @@ Submit
     }
 
     function extendFields() {
+        extendAssessmentFields();
+        extendQueryFields();
+    }
+
+    function extendAssessmentFields() {
         const assessmentField = document.createElement("div");
+        assessmentField.setAttribute('data-group-id', fieldCount);
         assessmentField.classList.add("assessmentField", "mb-4");
         
         const labelAndRemoveButtonWrapper = document.createElement("div");
@@ -117,7 +127,7 @@ Submit
     
         const label = document.createElement("label");
         label.textContent = "Assessment:";
-        label.htmlFor = "assessment-" + assessmentFieldCount;
+        label.htmlFor = "assessment-" + fieldCount;
         label.classList.add("block", "text-black-700", "font-bold", "mb-2");
         labelAndRemoveButtonWrapper.appendChild(label);
     
@@ -126,13 +136,14 @@ Submit
         removeButton.type = "button";
         removeButton.classList.add("py-2", "px-3", "bg-red-600");
         removeButton.addEventListener("click", function () {
-            assessmentField.remove();
+            const groupId = assessmentField.getAttribute('data-group-id');
+            removeFieldGroup(groupId);
         });
         labelAndRemoveButtonWrapper.appendChild(removeButton);
     
         const textarea = document.createElement("textarea");
         textarea.name = "assessment";
-        textarea.id = "assessment-" + assessmentFieldCount;
+        textarea.id = "assessment-" + fieldCount;
         textarea.classList.add("w-full", "py-2", "px-4", "border", "border-black-300", "rounded-md", "shadow-sm", "focus:outline-none", "focus:ring-green-500", "focus:border-green-500", "text-black");
         textarea.placeholder = "Enter your assessment";
         textarea.onkeydown = function (event) {
@@ -142,8 +153,42 @@ Submit
         assessmentField.appendChild(textarea);
     
         document.getElementById("assessmentFieldsContainer").appendChild(assessmentField);
-    
-        assessmentFieldCount++;
+    }
+
+    function extendQueryFields() {
+        const queryField = document.createElement("div");
+        queryField.setAttribute('data-group-id', fieldCount);
+        queryField.classList.add("queryField", "mb-4");
+
+        const labelAndRemoveButtonWrapper = document.createElement("div");
+        labelAndRemoveButtonWrapper.classList.add("flex", "justify-between", "items-center");
+        queryField.appendChild(labelAndRemoveButtonWrapper);
+        
+        const label = document.createElement("label");
+        label.textContent = "Query:";
+        label.htmlFor = "query-" + fieldCount;  // Use fieldCount here
+        label.classList.add("block", "text-black-700", "font-bold", "mb-2");
+        labelAndRemoveButtonWrapper.appendChild(label);
+        
+        // We won't add another remove button here since clicking on the 
+        // assessment's remove button will remove both the assessment and query fields.
+        
+        const textarea = document.createElement("textarea");
+        textarea.name = "query";
+        textarea.id = "query-" + fieldCount;  // Use fieldCount here
+        textarea.classList.add("w-full", "py-2", "px-4", "border", "border-black-300", "rounded-md", "shadow-sm", "focus:outline-none", "focus:ring-green-500", "focus:border-green-500", "text-black");
+        textarea.placeholder = "Enter your query";
+        queryField.appendChild(textarea);
+        
+        document.getElementById("queryFieldsContainer").appendChild(queryField);  // Ensure you have a container with this ID in your HTML
+    }
+
+    function removeFieldGroup(groupId) {
+        const assessmentFieldToRemove = document.querySelector(`.assessmentField[data-group-id="${groupId}"]`);
+        const queryFieldToRemove = document.querySelector(`.queryField[data-group-id="${groupId}"]`);
+
+        if (assessmentFieldToRemove) assessmentFieldToRemove.remove();
+        if (queryFieldToRemove) queryFieldToRemove.remove();
     }
 
     function showSearchBox(event, id) {
@@ -272,14 +317,12 @@ Submit
         }
     }
 
-    function toggleQueryTextarea() {
-        var checkbox = document.getElementById('showQueryCheckbox');
-        var queryField = document.getElementById('queryField');
-        
-        if (checkbox.checked) {
-            queryField.style.display = "block";
+    function toggleQueryVisibility() {
+        const queryContainer = document.getElementById("queryFieldsContainer");
+        if (queryContainer.style.display === "none") {
+            queryContainer.style.display = "block";
         } else {
-            queryField.style.display = "none";
+            queryContainer.style.display = "none";
         }
     }
 </script>
