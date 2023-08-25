@@ -30,7 +30,7 @@ func main() {
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
 	// Can be pased as a flag
-	db, err := openDB("web:pass@/templatemaker?parseTime=true")
+	db, err := openDB("root:bank@/templatemaker?parseTime=true")
 	if err != nil {
 		errorLog.Fatal(err)
 	}
