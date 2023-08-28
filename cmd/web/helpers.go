@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"runtime/debug"
+	"strings"
 
 	"github.com/go-playground/form/v4"
 	"github.com/isuquo/templatemaker/internal/models"
@@ -120,15 +121,28 @@ func (app *application) extractKeyValues(prefix string, data map[string]interfac
 		}
 		newPrefix += key
 
-		if nestedMap, ok := value.(map[string]interface{}); ok {
-			app.extractKeyValues(newPrefix, nestedMap, kv)
-		} else if nestedSlice, ok := value.([]interface{}); ok {
-			for i, item := range nestedSlice {
-				if nestedMap, ok := item.(map[string]interface{}); ok {
-					app.extractKeyValues(fmt.Sprintf("%s.%d", newPrefix, i), nestedMap, kv)
+		switch v := value.(type) {
+		case map[string]interface{}:
+			app.extractKeyValues(newPrefix, v, kv)
+		case []interface{}:
+			// Create a list to store all items for combined representation
+			var combinedItems []string
+
+			for i, item := range v {
+				switch itemValue := item.(type) {
+				case map[string]interface{}:
+					app.extractKeyValues(fmt.Sprintf("%s.%d", newPrefix, i), itemValue, kv)
+				default:
+					itemKey := fmt.Sprintf("%s.%d", newPrefix, i)
+					itemStr := fmt.Sprintf("%v", itemValue)
+					(*kv)[itemKey] = itemStr
+					combinedItems = append(combinedItems, itemStr)
 				}
 			}
-		} else {
+
+			// Set the combined representation of the list to the map
+			(*kv)[newPrefix] = strings.Join(combinedItems, ",")
+		default:
 			(*kv)[newPrefix] = fmt.Sprintf("%v", value)
 		}
 	}
