@@ -25,10 +25,12 @@ Loading...
 </div>
 
 <script>
-    setInterval(function(){
-        $.get("/template/status/{{.Template.ID}}", function(data){
-            if(data.status == "done"){
-                window.location.href = "/template/preview/" + data.id;
+    var pollingInterval = setInterval(function() {
+    console.log("Polling...");
+    $.get("/template/status/{{.Template.ID}}", function(data, status, xhr) {
+            if (status === "success" && data === "done") { // Assuming your server returns the string "done" as the response when processing is complete
+                clearInterval(pollingInterval); // Stop the polling
+                window.location.href = "/template/preview/{{.Template.ID}}"; // Redirect to the preview page
             }
         });
     }, 2000);

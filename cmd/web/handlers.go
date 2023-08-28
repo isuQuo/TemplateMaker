@@ -21,6 +21,7 @@ type templateCreateForm struct {
 	Assessment          []string `form:"assessment"`
 	Recommendation      string   `form:"recommendation"`
 	Query               []string `form:"query"`
+	Status              string   `db:"status"`
 	validator.Validator `form:"-"`
 }
 
@@ -403,26 +404,7 @@ func (app *application) templateEmailPost(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	template, err := app.templates.Get(id.String())
-	if err != nil {
-		if errors.Is(err, models.ErrNoRecord) {
-			app.notFound(w)
-		} else {
-			app.serverError(w, err)
-		}
-		return
-	}
-
-	// We do not want unauthorized users to access other users' templates.
-	userId := app.sessionManager.Get(r.Context(), "authenticatedUserID")
-	if userId != template.UserID {
-		app.clientError(w, http.StatusUnauthorized)
-	}
-
-	// Write template to http writer temporarily
-	//w.Write([]byte(fmt.Sprintf("%#v", template)))
-
-	//go app.processEmailTemplate(id)
+	go app.processEmailTemplate(id.String())
 	http.Redirect(w, r, fmt.Sprintf("/template/loading/%s", id), http.StatusSeeOther)
 }
 
@@ -443,12 +425,6 @@ func (app *application) showLoading(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// We do not want unauthorized users to access other users' templates.
-	userId := app.sessionManager.Get(r.Context(), "authenticatedUserID")
-	if userId != template.UserID {
-		app.clientError(w, http.StatusUnauthorized)
-	}
-
 	queries := strings.Split(template.Query, "{{EOA}}")
 
 	data := app.newTemplateData(r)
@@ -456,4 +432,21 @@ func (app *application) showLoading(w http.ResponseWriter, r *http.Request) {
 	data.Query = queries
 
 	app.render(w, http.StatusOK, "loading.html", data)
+}
+
+func (app *application) checkStatus(w http.ResponseWriter, r *http.Request) {
+	id := httprouter.ParamsFromContext(r.Context()).ByName("id")
+
+	status, err := app.templates.GetStatus(id)
+	if err != nil {
+		app.serverError(w, err)
+	}
+
+	// Send the status back to the client.
+	w.Write([]byte(status))
+}
+
+func (app *application) previewEmail(w http.ResponseWriter, r *http.Request) {
+	// Write template to http writer temporarily
+	w.Write([]byte("Previewing e-mail"))
 }

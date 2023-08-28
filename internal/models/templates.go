@@ -13,6 +13,7 @@ type Template struct {
 	Assessment     string
 	Recommendation string
 	Query          string
+	Status         string
 	UserID         string
 }
 
@@ -33,7 +34,7 @@ func (m *TemplateModel) SelectAll(userId string) ([]*Template, error) {
 
 	for rows.Next() {
 		s := &Template{}
-		err = rows.Scan(&s.ID, &s.Name, &s.Subject, &s.Description, &s.Assessment, &s.Recommendation, &s.Query, &s.UserID)
+		err = rows.Scan(&s.ID, &s.Name, &s.Subject, &s.Description, &s.Assessment, &s.Recommendation, &s.Query, &s.Status, &s.UserID)
 		if err != nil {
 			return nil, err
 		}
@@ -85,12 +86,36 @@ func (m *TemplateModel) Update(template *Template) error {
 	return err
 }
 
+func (m *TemplateModel) UpdateStatus(id string, status string) error {
+	const query = `
+	UPDATE templates
+	SET status=?
+	WHERE id=?`
+
+	_, err := m.DB.Exec(query, status, id)
+	return err
+}
+
+func (m *TemplateModel) GetStatus(id string) (string, error) {
+	const query = `
+	SELECT status
+	FROM templates
+	WHERE id=?`
+
+	var status string
+	err := m.DB.QueryRow(query, id).Scan(&status)
+	if err != nil {
+		return "", err
+	}
+	return status, nil
+}
+
 func (m *TemplateModel) Get(id string) (*Template, error) {
 	const query = "SELECT * from templates where id=?"
 
 	s := &Template{}
 
-	err := m.DB.QueryRow(query, id).Scan(&s.ID, &s.Name, &s.Subject, &s.Description, &s.Assessment, &s.Recommendation, &s.Query, &s.UserID)
+	err := m.DB.QueryRow(query, id).Scan(&s.ID, &s.Name, &s.Subject, &s.Description, &s.Assessment, &s.Recommendation, &s.Query, &s.Status, &s.UserID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrNoRecord

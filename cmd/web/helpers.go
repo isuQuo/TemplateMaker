@@ -9,6 +9,7 @@ import (
 	"os"
 	"runtime/debug"
 	"strings"
+	"time"
 
 	"github.com/go-playground/form/v4"
 	"github.com/isuquo/templatemaker/internal/models"
@@ -161,4 +162,11 @@ func (app *application) extractKeys(kv map[string]string) []string {
 
 func (app *application) getUserID(r *http.Request) string {
 	return app.sessionManager.GetString(r.Context(), "authenticatedUserID")
+}
+
+// TODO: Mock function
+func (app *application) processEmailTemplate(templateId string) {
+	app.templates.UpdateStatus(templateId, "in-progress")
+	time.Sleep(10 * time.Second)
+	app.templates.UpdateStatus(templateId, "done") // or "error"
 }
