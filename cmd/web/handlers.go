@@ -420,5 +420,40 @@ func (app *application) templateEmailPost(w http.ResponseWriter, r *http.Request
 	}
 
 	// Write template to http writer temporarily
-	w.Write([]byte(fmt.Sprintf("%#v", template)))
+	//w.Write([]byte(fmt.Sprintf("%#v", template)))
+
+	//go app.processEmailTemplate(id)
+	http.Redirect(w, r, fmt.Sprintf("/template/loading/%s", id), http.StatusSeeOther)
+}
+
+func (app *application) showLoading(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(httprouter.ParamsFromContext(r.Context()).ByName("id"))
+	if err != nil {
+		app.notFound(w)
+		return
+	}
+
+	template, err := app.templates.Get(id.String())
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+
+	// We do not want unauthorized users to access other users' templates.
+	userId := app.sessionManager.Get(r.Context(), "authenticatedUserID")
+	if userId != template.UserID {
+		app.clientError(w, http.StatusUnauthorized)
+	}
+
+	queries := strings.Split(template.Query, "{{EOA}}")
+
+	data := app.newTemplateData(r)
+	data.Template = template
+	data.Query = queries
+
+	app.render(w, http.StatusOK, "loading.html", data)
 }

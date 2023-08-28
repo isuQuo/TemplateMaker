@@ -1,0 +1,36 @@
+{{ define "title" }}
+Loading...
+{{ end }}
+
+{{ define "links" }}
+{{ end }}
+
+{{ define "content" }}
+<div class="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-lg shadow-md space-y-4">
+        <h1 class="text-2xl font-semibold text-center text-gray-800">Loading...</h1>
+        <div class="w-16 h-16 border-t-4 border-blue-500 border-solid rounded-full animate-spin mx-auto"></div>
+        
+        {{ if .Query }}
+        <div>
+            <p class="text-lg font-medium text-gray-700">Queries used:</p>
+            <ul class="list-disc list-inside space-y-1 mt-2 text-gray-600">
+                {{ range .Query }}
+                <li>{{ . }}</li>
+                {{ end }}
+            </ul>
+        </div>
+        {{ end }}
+    </div>
+</div>
+
+<script>
+    setInterval(function(){
+        $.get("/template/status/{{.Template.ID}}", function(data){
+            if(data.status == "done"){
+                window.location.href = "/template/preview/" + data.id;
+            }
+        });
+    }, 2000);
+</script>
+{{ end}}
