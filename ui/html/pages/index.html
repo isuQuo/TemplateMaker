@@ -24,8 +24,10 @@
                                                 class="ml-2 py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-md shadow-md inline-block text-sm">View</a>
                                             <a href="/template/edit/{{.ID}}"
                                                 class="ml-2 py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-md shadow-md inline-block text-sm">Edit</a>
-                                            <a href="/template/send/{{.ID}}"
-                                                class="ml-2 py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-md shadow-md inline-block text-sm">Send</a>
+                                            <form action="/template/email/{{.ID}}" method="post" id="deleteForm" class="ml-2">
+                                                <button type="submit"
+                                                    class="ml-2 py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-md shadow-md inline-block text-sm">Create E-mail</button>
+                                            </form>
                                             <form action="/template/delete/{{.ID}}" method="post" id="deleteForm" class="ml-2">
                                                 <button type="submit"
                                                     class="py-2 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-md shadow-md"

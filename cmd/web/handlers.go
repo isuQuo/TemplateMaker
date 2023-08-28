@@ -395,3 +395,30 @@ func (app *application) split(w http.ResponseWriter, r *http.Request) {
 		//"special":  specialKeys,
 	})
 }
+
+func (app *application) templateEmailPost(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(httprouter.ParamsFromContext(r.Context()).ByName("id"))
+	if err != nil {
+		app.notFound(w)
+		return
+	}
+
+	template, err := app.templates.Get(id.String())
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+
+	// We do not want unauthorized users to access other users' templates.
+	userId := app.sessionManager.Get(r.Context(), "authenticatedUserID")
+	if userId != template.UserID {
+		app.clientError(w, http.StatusUnauthorized)
+	}
+
+	// Write template to http writer temporarily
+	w.Write([]byte(fmt.Sprintf("%#v", template)))
+}

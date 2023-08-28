@@ -36,6 +36,7 @@ func (app *application) routes() http.Handler {
 	router.Handler(http.MethodGet, "/template/edit/:id", protected.ThenFunc(app.templateEditForm))
 	router.Handler(http.MethodPost, "/template/edit/:id", protected.ThenFunc(app.templateEditPost))
 	router.Handler(http.MethodGet, "/template/view/:id", protected.ThenFunc(app.templateViewForm))
+	router.Handler(http.MethodPost, "/template/email/:id", protected.ThenFunc(app.templateEmailPost))
 	router.Handler(http.MethodPost, "/template/delete/:id", protected.ThenFunc(app.templateDeletePost))
 	router.Handler(http.MethodGet, "/split", protected.ThenFunc(app.split))
 	router.Handler(http.MethodPost, "/user/signout", protected.ThenFunc(app.signoutUser))
