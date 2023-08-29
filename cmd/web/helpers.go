@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"runtime/debug"
 	"strings"
 	"time"
@@ -28,6 +27,14 @@ func (app *application) clientError(w http.ResponseWriter, status int) {
 
 func (app *application) notFound(w http.ResponseWriter) {
 	app.clientError(w, http.StatusNotFound)
+}
+
+func (app *application) respondWithJSONError(w http.ResponseWriter, message string, statusCode int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	json.NewEncoder(w).Encode(map[string]string{
+		"error": message,
+	})
 }
 
 // render is used to render a template to the client.
@@ -98,15 +105,9 @@ func (app *application) groupby(userId string) map[string][]*models.Template {
 	return groups
 }
 
-func (app *application) importLog(path string) (map[string]interface{}, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
+func (app *application) importLog(file []byte) (map[string]interface{}, error) {
 	var jsonObject map[string]interface{}
-	if err := json.NewDecoder(file).Decode(&jsonObject); err != nil {
+	if err := json.Unmarshal(file, &jsonObject); err != nil {
 		return nil, err
 	}
 

@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
+	"path/filepath"
 	"strings"
 
 	"github.com/google/uuid"
@@ -36,6 +39,11 @@ type userSignInForm struct {
 	Email               string     `form:"email"`
 	Password            string     `form:"password"`
 	validator.Validator `form:"-"` // This field is not a form field
+}
+
+type fileUploadForm struct {
+	File                *multipart.FileHeader `form:"file"`
+	validator.Validator `form:"-"`
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -367,7 +375,39 @@ func (app *application) signoutUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) split(w http.ResponseWriter, r *http.Request) {
-	jsonObject, err := app.importLog("test.json")
+	var form fileUploadForm
+
+	// Extract the uploaded file from the request
+	file, header, err := r.FormFile("logFile")
+	if err != nil {
+		app.respondWithJSONError(w, "Error reading file from request.", http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+
+	// Check MIME type
+	contentType := header.Header.Get("Content-Type")
+	form.CheckField(validator.IsAllowedMimeType(contentType), "file", "Invalid file type. Only JSON or CSV files are accepted.")
+
+	// Check file extension
+	fileExtension := filepath.Ext(header.Filename)
+	form.CheckField(validator.HasAllowedExtension(fileExtension), "file", "Invalid file extension. Only .json or .csv extensions are accepted.")
+
+	if !form.Valid() {
+		app.respondWithJSONError(w, form.FieldErrors["file"], http.StatusBadRequest)
+		return
+	}
+
+	// Read the file contents into a byte slice
+	fileContent, err := io.ReadAll(file)
+	if err != nil {
+		app.serverError(w, fmt.Errorf("error reading file contents: %v", err))
+		return
+	}
+
+	// Assuming app.importLog is modified to read from a byte slice
+	// Replace this with your file parsing logic
+	jsonObject, err := app.importLog(fileContent)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -387,13 +427,11 @@ func (app *application) split(w http.ResponseWriter, r *http.Request) {
 	}
 
 	keys := app.extractKeys(kv)
-	//specialKeys := logs.SpecialKeys
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"keys":     keys,
 		"jsonData": string(kvi),
-		//"special":  specialKeys,
 	})
 }
 

@@ -73,6 +73,7 @@ Submit
         </div>
 
         <div class="flex flex-row justify-between">
+            <input type="file" id="fileInput" style="display: none;">
             <button type="button" onclick="importLog()"
                 class="py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-md shadow-md">Import
                 Log</button>
@@ -93,8 +94,34 @@ Submit
     let fieldCount = 1;
 
     function importLog() {
-        fetch('/split')
-            .then(response => response.json())
+        const fileInput = document.getElementById('fileInput');
+        
+        // Trigger the file input dialog when the button is clicked
+        fileInput.click();
+
+        // When the user selects a file, process the file
+        fileInput.addEventListener('change', function() {
+            const file = fileInput.files[0];
+            if (!file) {
+                alert("Please select a file!");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('logFile', file);
+
+            fetch('/split', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error);
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
                 // Update the JSON viewer content
                 const jsonViewer = document.getElementById('json-viewer');
@@ -108,7 +135,10 @@ Submit
                 // Update the previousSearchResults array
                 previousSearchResults = data.keys;
             })
-            .catch(error => console.error('Error fetching JSON data:', error));
+            .catch(error => {
+                alert("An error occurred: " + error.message);
+            });
+        });
     }
 
     function extendFields() {

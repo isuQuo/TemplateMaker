@@ -6,6 +6,13 @@ import (
 	"unicode/utf8"
 )
 
+const (
+	JSONMimeType = "application/json"
+	CSVMimeType  = "text/csv"
+)
+
+var AllowedFileExtensions = []string{".json", ".csv"}
+
 // EmailRX is a regular expression that matches valid email addresses.
 var EmailRX = regexp.MustCompile(`^[a-zA-Z0-9.!#$%&'*+/=?^_` + "`" + `{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$`)
 
@@ -72,4 +79,19 @@ func MinChars(value string, n int) bool {
 // Matches() returns true if a value matches a regular expression
 func Matches(value string, rx *regexp.Regexp) bool {
 	return rx.MatchString(value)
+}
+
+// IsAllowedMimeType checks if the given value is a valid MIME type.
+func IsAllowedMimeType(value string) bool {
+	return value == JSONMimeType || value == CSVMimeType
+}
+
+// HasAllowedExtension checks if the given filename has an allowed extension.
+func HasAllowedExtension(filename string) bool {
+	for _, ext := range AllowedFileExtensions {
+		if strings.HasSuffix(filename, ext) {
+			return true
+		}
+	}
+	return false
 }
