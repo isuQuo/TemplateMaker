@@ -16,6 +16,7 @@ type templateData struct {
 	Templates       map[string][]*models.Template
 	Form            any
 	Flash           string
+	FlashError      string
 	IsAuthenticated bool
 	CSRFToken       string
 	Assessment      []string
@@ -59,6 +60,7 @@ func newTemplateCache() (map[string]*template.Template, error) {
 func (app *application) newTemplateData(r *http.Request) *templateData {
 	return &templateData{
 		Flash:           app.sessionManager.PopString(r.Context(), "flash"),
+		FlashError:      app.sessionManager.PopString(r.Context(), "error"),
 		IsAuthenticated: app.isAuthenticated(r),
 		CSRFToken:       nosurf.Token(r),
 	}

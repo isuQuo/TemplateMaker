@@ -41,6 +41,7 @@ func (app *application) routes() http.Handler {
 	router.Handler(http.MethodGet, "/template/loading/:id", protected.ThenFunc(app.showLoading))
 	router.Handler(http.MethodGet, "/template/status/:id", protected.ThenFunc(app.checkStatus))
 	router.Handler(http.MethodGet, "/template/preview/:id", protected.ThenFunc(app.previewEmail))
+	router.Handler(http.MethodGet, "/template/logs/:id", protected.ThenFunc(app.getTemplateLogs))
 	router.Handler(http.MethodPost, "/split", protected.ThenFunc(app.split))
 	router.Handler(http.MethodPost, "/user/signout", protected.ThenFunc(app.signoutUser))
 

@@ -1,9 +1,12 @@
 package validator
 
 import (
+	"mime/multipart"
 	"regexp"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/gabriel-vasile/mimetype"
 )
 
 const (
@@ -81,11 +84,6 @@ func Matches(value string, rx *regexp.Regexp) bool {
 	return rx.MatchString(value)
 }
 
-// IsAllowedMimeType checks if the given value is a valid MIME type.
-func IsAllowedMimeType(value string) bool {
-	return value == JSONMimeType || value == CSVMimeType
-}
-
 // HasAllowedExtension checks if the given filename has an allowed extension.
 func HasAllowedExtension(filename string) bool {
 	for _, ext := range AllowedFileExtensions {
@@ -94,4 +92,19 @@ func HasAllowedExtension(filename string) bool {
 		}
 	}
 	return false
+}
+
+func IsJSONOrCSV(file *multipart.FileHeader) bool {
+	f, err := file.Open()
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+
+	mime, err := mimetype.DetectReader(f)
+	if err != nil {
+		return false
+	}
+
+	return mime.String() == "application/json" || mime.String() == "text/csv"
 }

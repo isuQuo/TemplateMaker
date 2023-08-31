@@ -8,7 +8,6 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
-	"path/filepath"
 	"strings"
 
 	"github.com/google/uuid"
@@ -385,13 +384,13 @@ func (app *application) split(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	// Check MIME type
-	contentType := header.Header.Get("Content-Type")
-	form.CheckField(validator.IsAllowedMimeType(contentType), "file", "Invalid file type. Only JSON or CSV files are accepted.")
+	form.File = header
+	form.Validate()
 
-	// Check file extension
-	fileExtension := filepath.Ext(header.Filename)
-	form.CheckField(validator.HasAllowedExtension(fileExtension), "file", "Invalid file extension. Only .json or .csv extensions are accepted.")
+	if !form.Valid() {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
 
 	if !form.Valid() {
 		app.respondWithJSONError(w, form.FieldErrors["file"], http.StatusBadRequest)
@@ -436,14 +435,65 @@ func (app *application) split(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) templateEmailPost(w http.ResponseWriter, r *http.Request) {
+	var form fileUploadForm
+	logFiles := []*multipart.FileHeader{}
+
 	id, err := uuid.Parse(httprouter.ParamsFromContext(r.Context()).ByName("id"))
 	if err != nil {
 		app.notFound(w)
 		return
 	}
 
-	go app.processEmailTemplate(id.String())
-	http.Redirect(w, r, fmt.Sprintf("/template/loading/%s", id), http.StatusSeeOther)
+	template, err := app.templates.Get(id.String())
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+
+	err = r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	if r.MultipartForm != nil {
+		logsRequired := len(strings.Split(template.Assessment, "{{EOA}}"))
+		if len(r.MultipartForm.File) < logsRequired {
+			app.clientError(w, http.StatusBadRequest)
+			return
+		}
+
+		for _, files := range r.MultipartForm.File {
+			if len(files) > 0 {
+				form.File = files[0]
+				form.Validate()
+
+				if !form.Valid() {
+					app.respondWithJSONError(w, form.FieldErrors["file"], http.StatusBadRequest)
+					return
+				} else {
+					// Add file to slice of files
+					logFiles = append(logFiles, form.File)
+				}
+			}
+		}
+	}
+
+	fmt.Println("Processing email template...")
+	err = app.processEmailTemplate(template, logFiles)
+	fmt.Println("Done processing email template...", err)
+	if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprintf(`{"status": "error", "message": "%s"}`, err.Error())))
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/template/preview/%s", template.ID), http.StatusSeeOther)
 }
 
 func (app *application) showLoading(w http.ResponseWriter, r *http.Request) {
@@ -487,4 +537,32 @@ func (app *application) checkStatus(w http.ResponseWriter, r *http.Request) {
 func (app *application) previewEmail(w http.ResponseWriter, r *http.Request) {
 	// Write template to http writer temporarily
 	w.Write([]byte("Previewing e-mail"))
+}
+
+func (app *application) getTemplateLogs(w http.ResponseWriter, r *http.Request) {
+	id := httprouter.ParamsFromContext(r.Context()).ByName("id")
+
+	template, err := app.templates.Get(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+
+	// Send the status back to the client.
+	logsRequired := len(strings.Split(template.Assessment, "{{EOA}}"))
+	queries := strings.Split(template.Query, "{{EOA}}")
+
+	w.Header().Set("Content-Type", "application/json")
+	response := map[string]interface{}{
+		"totalLogsRequired": logsRequired,
+		"queries":           queries,
+	}
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		app.serverError(w, err)
+	}
 }

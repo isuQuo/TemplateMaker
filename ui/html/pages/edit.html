@@ -52,16 +52,20 @@ Edit
                 placeholder="Enter your recommendations">{{.Template.Recommendation}}</textarea>
         </div>
 
-        {{if .Template.Query}}
-            <div id="queryFieldsContainer">
-                <div class="queryField mb-4">
-                    <label for="query-0" class="block text-black-700 font-bold mb-2">Query:</label>
-                    <textarea name="query" id="query-0" onkeydown="showSearchBox(event, id)"
-                        class="w-full py-2 px-4 border border-black-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-black"
-                        placeholder="Enter your query"></textarea>
-                </div>
+        <div class="mb-4">
+            <label>
+                <input type="checkbox" id="showQueryCheckbox" onclick="toggleQueryVisibility()"> Show Query Fields
+            </label>
+        </div>
+
+        <div id="queryFieldsContainer" style="display:none;">
+            <div class="queryField mb-4">
+                <label for="query-0" class="block text-black-700 font-bold mb-2">Query:</label>
+                <textarea name="query" id="query-0" onkeydown="showSearchBox(event, id)"
+                    class="w-full py-2 px-4 border border-black-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-black"
+                    placeholder="Enter your query"></textarea>
             </div>
-        {{end}}
+        </div>
 
         <div class="flex flex-row justify-between">
             <input type="file" id="fileInput" style="display: none;">
@@ -365,14 +369,12 @@ Edit
         }
     }
 
-    function toggleQueryTextarea() {
-        var checkbox = document.getElementById('showQueryCheckbox');
-        var queryField = document.getElementById('queryField');
-        
-        if (checkbox.checked) {
-            queryField.style.display = "block";
+    function toggleQueryVisibility() {
+        const queryContainer = document.getElementById("queryFieldsContainer");
+        if (queryContainer.style.display === "none") {
+            queryContainer.style.display = "block";
         } else {
-            queryField.style.display = "none";
+            queryContainer.style.display = "none";
         }
     }
 </script>

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"mime/multipart"
 	"net/http"
 	"runtime/debug"
 	"strings"
@@ -12,7 +13,14 @@ import (
 
 	"github.com/go-playground/form/v4"
 	"github.com/isuquo/templatemaker/internal/models"
+	"github.com/isuquo/templatemaker/internal/rx"
+	"github.com/isuquo/templatemaker/internal/validator"
 )
+
+type Result struct {
+	Err     error
+	Message string
+}
 
 func (app *application) serverError(w http.ResponseWriter, err error) {
 	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
@@ -165,9 +173,22 @@ func (app *application) getUserID(r *http.Request) string {
 	return app.sessionManager.GetString(r.Context(), "authenticatedUserID")
 }
 
-// TODO: Mock function
-func (app *application) processEmailTemplate(templateId string) {
-	app.templates.UpdateStatus(templateId, "in-progress")
-	time.Sleep(10 * time.Second)
-	app.templates.UpdateStatus(templateId, "done") // or "error"
+func (app *application) processEmailTemplate(t *models.Template, files []*multipart.FileHeader) error {
+	app.templates.UpdateStatus(t.ID, "in-progress")
+
+	time.Sleep(5 * time.Second)
+
+	_, err := rx.Test(t, files)
+	if err != nil {
+		app.templates.UpdateStatus(t.ID, "error")
+		return err
+	}
+
+	app.templates.UpdateStatus(t.ID, "done")
+	return nil
+}
+
+// Validate is used to validate the form data.
+func (f *fileUploadForm) Validate() {
+	f.CheckField(validator.IsJSONOrCSV(f.File), "file", "Invalid file content. Only JSON or CSV files are accepted.")
 }

@@ -13,4 +13,10 @@ require (
 	golang.org/x/crypto v0.8.0
 )
 
-require github.com/google/uuid v1.3.0
+require (
+	github.com/gabriel-vasile/mimetype v1.4.2
+	github.com/google/uuid v1.3.0
+	golang.org/x/sync v0.3.0
+)
+
+require golang.org/x/net v0.9.0 // indirect

@@ -28,9 +28,17 @@ Loading...
     var pollingInterval = setInterval(function() {
     console.log("Polling...");
     $.get("/template/status/{{.Template.ID}}", function(data, status, xhr) {
-            if (status === "success" && data === "done") { // Assuming your server returns the string "done" as the response when processing is complete
-                clearInterval(pollingInterval); // Stop the polling
-                window.location.href = "/template/preview/{{.Template.ID}}"; // Redirect to the preview page
+            if (status === "success") {
+                console.log("Status: " + data)
+                if (data === "done") { // Assuming your server returns the string "done" as the response when processing is complete
+                    clearInterval(pollingInterval); // Stop the polling
+                    window.location.href = "/template/preview/{{.Template.ID}}"; // Redirect to the preview page
+                } else if (data === "error") {
+                    clearInterval(pollingInterval);
+                    alert("An error occurred while processing your template.");
+                    window.location.href = "/";
+                    // You can redirect or handle the error in another way if needed
+                }
             }
         });
     }, 2000);
