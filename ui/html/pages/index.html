@@ -79,12 +79,94 @@
     </div>
 </div>
 
+<!-- Selection Modal -->
+<div class="fixed inset-0 flex items-center justify-center hidden" id="selection-modal">
+    <div class="bg-white rounded shadow-lg relative w-1/2"> <!-- Added w-1/2 to ensure a fixed width -->
+        <!-- Header area -->
+        <div class="flex justify-between items-center bg-gray-200 p-4 rounded-t"> <!-- Dedicated header area with padding and background -->
+            <h2 class="text-xl">Choose a Title</h2>
+            <!-- Cancel Button -->
+            <button class="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded" onclick="closeModal()">X</button>
+        </div>
+
+        <!-- Content area -->
+        <div class="p-8">
+            <select id="struct-selection" class="mb-4 w-full"></select> <!-- Made select full width for aesthetics -->
+
+            <!-- Submit Button -->
+            <button class="bg-blue-500 text-white py-2 px-4 rounded mt-4" onclick="submitTitleSelection()">Submit</button>
+        </div>
+    </div>
+</div>
+
+
+
 <script>
     let totalLogsRequired;
     let logsUploaded = 0;
     let formData = new FormData();
 
+    // New function to submit the user's title selection to the server
+    function submitTitleSelection() {
+        const selectionElement = document.getElementById('struct-selection');
+        const selectedOption = selectionElement.options[selectionElement.selectedIndex];
+        const selectedTitle = selectedOption.text;
+        const selectedID = selectedOption.value;
+
+        displayLoadingModal();
+
+        fetch(`/template/title/${selectedID}`, {  // Replace with your endpoint
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: selectedTitle,
+                id: selectedID
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideLoadingModal();
+
+            if (data.status === "error") {
+                sessionStorage.setItem("flash", data.message);
+                window.location.href = "/";
+            } else {
+                // Redirect to the final page
+                window.location.href = "/final-page"; // Replace with your endpoint
+            }
+        })
+        .catch(error => {
+            hideLoadingModal();
+            alert("An error occurred: " + error.message);
+        });
+    }
+
+    function populateTitleSelection(structs) {
+        const selectionElement = document.getElementById('struct-selection');
+        selectionElement.innerHTML = '';  // Clear any previous structs
+
+        structs.forEach(s => {
+            const option = document.createElement('option');
+            option.textContent = s.Name;
+            option.value = s.ID;
+            selectionElement.appendChild(option);
+        });
+    }
+
+    function handleStructSelection() {
+        const selectedID = document.getElementById('struct-selection').value;
+        // Here, send the selected ID to the server (not demonstrated), and depending on the server's response, move forward.
+        document.getElementById('selection-modal').classList.add('hidden'); // Hide the selection modal.
+        displayLoadingModal(); // Show loading while the server is processing.
+        // After processing, continue with the rest of the code flow.
+    }
+
+
     function requestTotalLogsRequired(templateID) {
+        displayLoadingModal();
+
         return new Promise((resolve, reject) => {
             fetch(`/template/logs/${templateID}`)
                 .then(response => {
@@ -94,10 +176,17 @@
                     return response.json();
                 })
                 .then(data => {
+                    hideLoadingModal();
                     if (data && typeof data.totalLogsRequired === 'number' && Array.isArray(data.queries)) {
-                        // Populate the modal with the queries
                         populateModalQueries(data.queries);
-                        resolve(data.totalLogsRequired);
+                        
+                        if (data.structs && data.structs.length) {
+                            populateTitleSelection(data.structs);
+                            document.getElementById('selection-modal').classList.remove('hidden');
+                            document.getElementById('modal-overlay').classList.remove('hidden');
+                        } else {
+                            resolve(data.totalLogsRequired);
+                        }
                     } else {
                         throw new Error('Invalid data format received.');
                     }
@@ -107,6 +196,7 @@
                 });
         });
     }
+
 
     function populateModalQueries(queries) {
         const queryListElement = document.getElementById('loading-modal-queries');
@@ -189,6 +279,7 @@
     function closeModal() {
         document.getElementById('modal-overlay').classList.add('hidden');
         document.getElementById('modal').classList.add('hidden');
+        document.getElementById('selection-modal').classList.add('hidden');
     }
 
     document.addEventListener('DOMContentLoaded', function() {

@@ -192,3 +192,9 @@ func (app *application) processEmailTemplate(t *models.Template, files []*multip
 func (f *fileUploadForm) Validate() {
 	f.CheckField(validator.IsJSONOrCSV(f.File), "file", "Invalid file content. Only JSON or CSV files are accepted.")
 }
+
+func (app *application) getStructs(t *models.Template) ([]rx.TestStruct, error) {
+	//time.Sleep(5 * time.Second)
+
+	return rx.GetStructs(t)
+}

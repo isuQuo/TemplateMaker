@@ -11,6 +11,11 @@ import (
 	"github.com/isuquo/templatemaker/internal/models"
 )
 
+type TestStruct struct {
+	Name string
+	ID   string
+}
+
 func Test(t *models.Template, files []*multipart.FileHeader) (string, error) {
 
 	fmt.Printf("Template: %+v\n", t)
@@ -43,4 +48,15 @@ func Test(t *models.Template, files []*multipart.FileHeader) (string, error) {
 	}
 
 	return "", errors.New("AAAAAAAAAA")
+}
+
+func GetStructs(t *models.Template) ([]TestStruct, error) {
+	var structs []TestStruct
+
+	structs = append(structs, TestStruct{
+		Name: t.Name,
+		ID:   t.ID,
+	})
+
+	return structs, nil
 }

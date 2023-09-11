@@ -552,9 +552,16 @@ func (app *application) getTemplateLogs(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// Send the status back to the client.
 	logsRequired := len(strings.Split(template.Assessment, "{{EOA}}"))
 	queries := strings.Split(template.Query, "{{EOA}}")
+
+	// Hypothetical: Retrieving structs. Replace with your actual logic.
+	structs, err := app.getStructs(template)
+	if err != nil {
+		// Handle error accordingly.
+		app.serverError(w, err)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	response := map[string]interface{}{
@@ -562,7 +569,35 @@ func (app *application) getTemplateLogs(w http.ResponseWriter, r *http.Request) 
 		"queries":           queries,
 	}
 
+	if len(structs) > 0 {
+		response["structs"] = structs
+	}
+
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		app.serverError(w, err)
 	}
+}
+
+// Incomplete
+func (app *application) templateTitlePost(w http.ResponseWriter, r *http.Request) {
+	// Create a struct to decode the incoming data
+	type Selection struct {
+		Name string `json:"name"`
+		ID   string `json:"id"`
+	}
+
+	var selection Selection
+
+	// Decode the body into our struct
+	if err := json.NewDecoder(r.Body).Decode(&selection); err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	// Print the selection to the console
+	fmt.Printf("Selected Name: %s, ID: %s\n", selection.Name, selection.ID)
+
+	// Respond with a success status and maybe a message
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "Data received!"})
 }
