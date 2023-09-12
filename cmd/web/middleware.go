@@ -88,15 +88,28 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 			return
 		}
 
-		exists, err := app.users.Exists(id)
+		user, err := app.users.Get(id)
 		if err != nil {
 			app.serverError(w, err)
 			return
 		}
 
-		if exists {
+		if user != nil {
 			ctx := context.WithValue(r.Context(), isAuthenticatedContextKey, true)
+			ctx = context.WithValue(ctx, isAdministratorContextKey, user.IsAdmin)
 			r = r.WithContext(ctx)
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (app *application) requireAdmin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !app.isAdmin(r) {
+			// Redirect to forbidden or show error
+			app.clientError(w, http.StatusForbidden)
+			return
 		}
 
 		next.ServeHTTP(w, r)

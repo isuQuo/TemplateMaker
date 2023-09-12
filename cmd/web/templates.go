@@ -14,6 +14,8 @@ import (
 type templateData struct {
 	Template        *models.Template
 	Templates       map[string][]*models.Template
+	Users           []*models.User
+	APIKeys         []*models.APIKey
 	Form            any
 	Flash           string
 	FlashError      string

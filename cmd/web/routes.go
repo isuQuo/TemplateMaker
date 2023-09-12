@@ -29,6 +29,15 @@ func (app *application) routes() http.Handler {
 	router.Handler(http.MethodPost, "/user/signin", dynamic.ThenFunc(app.signinUserPost))
 
 	protected := dynamic.Append(app.requireAuthentication)
+	protectedAdmin := dynamic.Append(app.requireAuthentication, app.requireAdmin)
+
+	router.Handler(http.MethodGet, "/admin", protectedAdmin.ThenFunc(app.admin))
+	router.Handler(http.MethodGet, "/admin/api-keys", protectedAdmin.ThenFunc(app.adminAPIKeys))
+	router.Handler(http.MethodPost, "/admin/api-keys/add", protectedAdmin.ThenFunc(app.addAPIKeyPost))
+	router.Handler(http.MethodPost, "/admin/api-keys/delete/:name", protectedAdmin.ThenFunc(app.deleteAPIKeyPost))
+
+	router.Handler(http.MethodGet, "/admin/users", protectedAdmin.ThenFunc(app.adminListUsers))
+	router.Handler(http.MethodPost, "/admin/users/delete/:id", protectedAdmin.ThenFunc(app.adminDeleteUser))
 
 	router.Handler(http.MethodGet, "/", protected.ThenFunc(app.home))
 	router.Handler(http.MethodGet, "/template/create", protected.ThenFunc(app.templateCreateForm))

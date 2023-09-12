@@ -20,6 +20,7 @@ type application struct {
 	infoLog        *log.Logger
 	templates      *models.TemplateModel
 	users          *models.UserModel
+	apikeys        *models.APIKeyModel
 	templateCache  map[string]*template.Template
 	formDecoder    *form.Decoder
 	sessionManager *scs.SessionManager
@@ -54,6 +55,7 @@ func main() {
 		infoLog:        infoLog,
 		templates:      &models.TemplateModel{DB: db},
 		users:          &models.UserModel{DB: db},
+		apikeys:        &models.APIKeyModel{DB: db},
 		templateCache:  templateCache,
 		formDecoder:    formDecoder,
 		sessionManager: sessionManager,

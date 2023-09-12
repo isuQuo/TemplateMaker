@@ -1,0 +1,15 @@
+{{define "content"}}
+<section class="bg-gray-900 py-20 min-h-screen">
+    <div class="container mx-auto px-4">
+        <h2 class="text-4xl font-bold mb-8 text-white">Admin Panel</h2>
+
+        <div class="flex space-x-4">
+            <!-- Button to navigate to the users page -->
+            <a href="/admin/users" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-md shadow-md">Manage Users</a>
+
+            <!-- Button to navigate to the API keys page -->
+            <a href="/admin/api-keys" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-md shadow-md">Manage API Keys</a>
+        </div>
+    </div>
+</section>
+{{end}}

@@ -1,0 +1,64 @@
+{{define "content"}}
+<section class="bg-gray-900 py-20 min-h-screen">
+    <div class="container mx-auto px-4">
+        <h2 class="text-4xl font-bold mb-8 text-white">API Keys</h2>
+
+        <!-- Button to open the modal -->
+        <button onclick="toggleModal()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-md shadow-md">Add API Key</button>
+
+        <!-- Table showing API keys -->
+        <table class="min-w-full bg-white rounded-lg overflow-hidden">
+            <thead>
+                <tr class="text-gray-700">
+                    <th class="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-lg font-semibold uppercase tracking-wider">Name</th>
+                    <th class="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-lg font-semibold uppercase tracking-wider">API Key</th>
+                    <th class="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-lg font-semibold uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .APIKeys}}
+                <tr class="text-gray-600">
+                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-300">{{.Name}}</td>
+                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-300">**********</td>
+                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-300">
+                        <!-- Use a form to post the delete request -->
+                        <form action="/admin/api-keys/delete/{{.Name}}" method="post" onsubmit="return confirm('Are you sure you want to delete this API key?');" class="inline">
+                            <button type="submit" class="px-2 py-1 bg-red-500 hover:bg-red-600 text-white font-bold rounded-md shadow-md">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal for adding Name and API Key -->
+    <div id="modal" class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 hidden justify-center items-center">
+        <div class="bg-white rounded-lg p-8">
+            <h3 class="text-xl font-medium mb-4">Add API Key</h3>
+            <form action="/admin/api-keys/add" method="post">
+                <div class="mb-4">
+                    <label class="block text-sm font-bold mb-2" for="name">Name:</label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3" id="name" name="name" type="text" required>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-bold mb-2" for="keyvalue">API Key:</label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3" id="keyvalue" name="keyvalue" type="text" required>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-md" type="submit">
+                        Add
+                    </button>
+                    <button type="button" class="text-red-500 hover:text-red-600" onclick="toggleModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        function toggleModal() {
+            const modal = document.getElementById('modal');
+            modal.classList.toggle('hidden');
+        }
+    </script>
+</section>
+{{end}}

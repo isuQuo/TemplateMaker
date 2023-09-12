@@ -40,6 +40,12 @@ type userSignInForm struct {
 	validator.Validator `form:"-"` // This field is not a form field
 }
 
+type apiKeyCreateForm struct {
+	Name                string     `form:"name"`
+	KeyValue            string     `form:"keyvalue"`
+	validator.Validator `form:"-"` // This field is not a form field
+}
+
 type fileUploadForm struct {
 	File                *multipart.FileHeader `form:"file"`
 	validator.Validator `form:"-"`
@@ -50,6 +56,108 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	data.Templates = app.groupby(app.getUserID(r))
 
 	app.render(w, http.StatusOK, "index.html", data)
+}
+
+func (app *application) admin(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+
+	app.render(w, http.StatusOK, "admin.html", data)
+}
+
+func (app *application) adminAPIKeys(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+	apikeys, err := app.apikeys.GetAll()
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	data.APIKeys = apikeys
+
+	app.render(w, http.StatusOK, "admin_api_keys.html", data)
+}
+
+func (app *application) addAPIKeyPost(w http.ResponseWriter, r *http.Request) {
+	var form apiKeyCreateForm
+
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form.CheckField(validator.NotBlank(form.Name), "name", "This field cannot be blank")
+	form.CheckField(validator.NotBlank(form.KeyValue), "keyValue", "This field cannot be blank")
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, http.StatusUnprocessableEntity, "admin_api_keys.html", data)
+		return
+	}
+
+	// Create a new APIKey struct containing the form data.
+	apiKey := &models.APIKey{
+		Name:     form.Name,
+		KeyValue: form.KeyValue,
+	}
+
+	// Insert the API key data into the database.
+	err = app.apikeys.Insert(apiKey.Name, apiKey.KeyValue)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	// Use the app.session.Put() method to add a message to the session.
+	app.sessionManager.Put(r.Context(), "flash", "API Key successfully created!")
+
+	http.Redirect(w, r, "/admin/api-keys", http.StatusSeeOther)
+}
+
+func (app *application) deleteAPIKeyPost(w http.ResponseWriter, r *http.Request) {
+	name := httprouter.ParamsFromContext(r.Context()).ByName("name")
+
+	err := app.apikeys.Delete(name)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	// Use the app.session.Put() method to add a message to the session.
+	app.sessionManager.Put(r.Context(), "flash", "API Key successfully deleted!")
+
+	http.Redirect(w, r, "/admin/api-keys", http.StatusSeeOther)
+}
+
+func (app *application) adminListUsers(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+	users, err := app.users.SelectAll()
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	data.Users = users
+
+	app.render(w, http.StatusOK, "admin_users.html", data)
+}
+
+func (app *application) adminDeleteUser(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(httprouter.ParamsFromContext(r.Context()).ByName("id"))
+	if err != nil {
+		app.notFound(w)
+		return
+	}
+
+	err = app.users.Delete(id.String())
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	// Use the app.session.Put() method to add a message to the session.
+	app.sessionManager.Put(r.Context(), "flash", "User successfully deleted!")
+
+	http.Redirect(w, r, "/admin/users", http.StatusSeeOther)
 }
 
 func (app *application) templateCreateForm(w http.ResponseWriter, r *http.Request) {

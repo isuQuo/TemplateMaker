@@ -97,6 +97,16 @@ func (app *application) isAuthenticated(r *http.Request) bool {
 	return isAuthenticated
 }
 
+// isAdmin returns true if the current request is from an admin user.
+func (app *application) isAdmin(r *http.Request) bool {
+	isAdmin, ok := r.Context().Value(isAdministratorContextKey).(bool)
+	if !ok {
+		return false
+	}
+
+	return isAdmin
+}
+
 // groupby groups templates by name.
 func (app *application) groupby(userId string) map[string][]*models.Template {
 	allTemplates, err := app.templates.SelectAll(userId)

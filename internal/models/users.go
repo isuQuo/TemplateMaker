@@ -11,11 +11,12 @@ import (
 )
 
 type User struct {
-	ID             int
+	ID             string
 	Name           string
 	Email          string
 	HashedPassword []byte
 	Created        time.Time
+	IsAdmin        bool
 }
 
 type UserModel struct {
@@ -28,8 +29,8 @@ func (m *UserModel) Insert(id, name, email, password string) error {
 		return err
 	}
 
-	stmt := `INSERT INTO users (id, name, email, hashed_password, created)
-	VALUES(?, ?, ?, ?, UTC_TIMESTAMP())`
+	stmt := `INSERT INTO users (id, name, email, hashed_password, created, is_admin)
+	VALUES(?, ?, ?, ?, UTC_TIMESTAMP(), FALSE)`
 
 	_, err = m.DB.Exec(stmt, id, name, email, string(hashedPassword))
 	if err != nil {
@@ -85,4 +86,53 @@ func (m *UserModel) Exists(id string) (bool, error) {
 
 	err := m.DB.QueryRow(stmt, id).Scan(&exists)
 	return exists, err
+}
+
+func (m *UserModel) Get(id string) (*User, error) {
+	stmt := `SELECT id, name, email, created, is_admin FROM users WHERE id = ?`
+
+	u := &User{}
+	err := m.DB.QueryRow(stmt, id).Scan(&u.ID, &u.Name, &u.Email, &u.Created, &u.IsAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	return u, nil
+}
+
+func (m *UserModel) SelectAll() ([]*User, error) {
+	stmt := `SELECT id, name, email, created FROM users ORDER BY created DESC`
+
+	rows, err := m.DB.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	users := []*User{}
+	for rows.Next() {
+		u := &User{}
+		err := rows.Scan(&u.ID, &u.Name, &u.Email, &u.Created)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, u)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
+func (m *UserModel) Delete(id string) error {
+	stmt := `DELETE FROM users WHERE id = ?`
+
+	_, err := m.DB.Exec(stmt, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
