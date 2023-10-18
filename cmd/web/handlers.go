@@ -8,6 +8,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"path"
 	"strings"
 
 	"github.com/google/uuid"
@@ -512,18 +513,32 @@ func (app *application) split(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Assuming app.importLog is modified to read from a byte slice
-	// Replace this with your file parsing logic
-	jsonObject, err := app.importLog(fileContent)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
 	kv := make(map[string]string)
-	err = app.extractKeyValues("", jsonObject, &kv)
-	if err != nil {
-		app.serverError(w, err)
+	switch path.Ext(header.Filename) {
+	case ".json":
+		jsonObject, err := app.importJSONLog(fileContent)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		err = app.extractKeyValues("", jsonObject, &kv)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+	case ".csv":
+		csvObject, err := app.importCSVLog(fileContent)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		err = app.extractKeyValues("", csvObject, &kv)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+	default:
+		app.serverError(w, fmt.Errorf("unsupported file format: %s", path.Ext(header.Filename)))
 		return
 	}
 

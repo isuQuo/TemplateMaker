@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,6 +16,7 @@ import (
 	"github.com/isuquo/templatemaker/internal/models"
 	"github.com/isuquo/templatemaker/internal/rx"
 	"github.com/isuquo/templatemaker/internal/validator"
+	"github.com/microcosm-cc/bluemonday"
 )
 
 type Result struct {
@@ -123,13 +125,44 @@ func (app *application) groupby(userId string) map[string][]*models.Template {
 	return groups
 }
 
-func (app *application) importLog(file []byte) (map[string]interface{}, error) {
+func (app *application) importJSONLog(file []byte) (map[string]interface{}, error) {
 	var jsonObject map[string]interface{}
 	if err := json.Unmarshal(file, &jsonObject); err != nil {
 		return nil, err
 	}
 
 	return jsonObject, nil
+}
+
+func (app *application) importCSVLog(file []byte) (map[string]interface{}, error) {
+	reader := csv.NewReader(bytes.NewReader(file))
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(records) < 2 {
+		return nil, errors.New("csv file must have at least a header row and a data row")
+	}
+
+	return app.parseCSVToNestedMap(records)
+}
+
+func (app *application) parseCSVToNestedMap(records [][]string) (map[string]interface{}, error) {
+	nestedMap := make(map[string]interface{})
+
+	for _, record := range records[1:] { // Skipping the header row
+		currentMap := nestedMap
+		for i := 0; i < len(record)-2; i++ { // Up to one before the last column (value column)
+			if _, exists := currentMap[record[i]]; !exists {
+				currentMap[record[i]] = make(map[string]interface{})
+			}
+			currentMap = currentMap[record[i]].(map[string]interface{})
+		}
+		currentMap[record[len(record)-2]] = record[len(record)-1] // Last column is the value
+	}
+
+	return nestedMap, nil
 }
 
 // extractKeyValues extracts all the key-value pairs from a nested map into dot notation.
@@ -207,4 +240,41 @@ func (app *application) getStructs(t *models.Template) ([]rx.TestStruct, error) 
 	//time.Sleep(5 * time.Second)
 
 	return rx.GetStructs(t)
+}
+
+func sanitizeHTMLFunc(raw interface{}) interface{} {
+	p := bluemonday.NewPolicy()
+	p.AllowElements("b", "ul", "li")
+
+	switch v := raw.(type) {
+	case string:
+		return p.Sanitize(v)
+	case []string:
+		sanitizedStrings := make([]string, len(v))
+		for i, s := range v {
+			sanitizedStrings[i] = p.Sanitize(s)
+		}
+		return sanitizedStrings
+	default:
+		return ""
+	}
+}
+
+func sanitizeHTMLSliceFunc(raws []string) []string {
+	p := bluemonday.NewPolicy()
+	p.AllowElements("b", "ul", "li")
+	sanitizedSlice := make([]string, len(raws))
+	for i, raw := range raws {
+		sanitized := p.Sanitize(raw)
+		sanitizedSlice[i] = sanitized
+	}
+	return sanitizedSlice
+}
+
+func toJSONFunc(v interface{}) (string, error) {
+	jsonData, err := json.Marshal(v)
+	if err != nil {
+		return "", err
+	}
+	return string(jsonData), nil
 }

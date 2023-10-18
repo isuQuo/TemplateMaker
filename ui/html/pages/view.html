@@ -21,23 +21,23 @@ View
     </div>
     <div class="mb-4">
         <label for="description" class="block text-black-700 font-bold mb-2"></label>Description:</label>
-        <textarea name="description" id="description" disabled
+        <div name="description" id="description" contenteditable="false"
             class="w-full py-2 px-4 border border-black-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-black"
-            placeholder="Enter your description">{{.Template.Description}}</textarea>
+            placeholder="Enter your description">{{.Template.Description | sanitizeHTML}}</div>
     </div>
     <div id="assessmentFieldsContainer">
         <div class="assessmentField mb-4">
             <label for="assessment-0" class="block text-black-700 font-bold mb-2">Assessment:</label>
-            <textarea name="assessment" id="assessment-0" disabled
+            <div name="assessment" id="assessment-0" contenteditable="false"
                 class="w-full py-2 px-4 border border-black-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-black"
-                placeholder="Enter your assessment"></textarea>
+                placeholder="Enter your assessment"></div>
         </div>
     </div>
     <div class="mb-4">
         <label for="recommendation" class="block text-black-700 font-bold mb-2">Recommendations:</label>
         <textarea name="recommendation" id="recommendation" disabled
             class="w-full py-2 px-4 border border-black-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 text-black"
-            placeholder="Enter your recommendations">{{.Template.Recommendation}}</textarea>
+            placeholder="Enter your recommendations">{{.Template.Recommendation | sanitizeHTML}}</textarea>
     </div>
     
     {{if .Template.Query}}
@@ -64,87 +64,82 @@ View
     </div>
 </div>
 
-{{with .Template}}
 <script>
     let fieldCount = 1;
 
     window.assessmentLength = "{{len $.Assessment}}";
-    window.assessmentValues = JSON.parse('{{$.Assessment | json}}');
+    window.assessmentValues = JSON.parse("{{sanitizeHTMLSlice $.Assessment | json}}");
     window.queryLength = "{{len $.Query}}";
-    window.queryValues = JSON.parse('{{$.Query | json}}');
+    window.queryValues = JSON.parse("{{$.Query | json}}");
 
     window.addEventListener('DOMContentLoaded', (event) => {
-        document.getElementById("assessment-0").value = assessmentValues[0];
-        document.getElementById("query-0").value = queryValues[0];
-        if (assessmentLength > 1) {
-            for (let i = 1; i < assessmentLength; i++) {
-                extendAssessmentFields(assessmentValues[i]);
-                extendQueryFields(queryValues[i]);
-                fieldCount++;
+        if (window.assessmentValues && window.assessmentValues.length) {
+            for (let i = 0; i < window.assessmentValues.length; i++) {
+                if (i === 0) {
+                    document.getElementById("assessment-0").innerHTML = window.assessmentValues[0];
+                    document.getElementById("query-0").textContent = window.queryValues[0];
+                    console.log("Value for assessment-0:", window.assessmentValues[0]);
+                } else {
+                    extendAssessmentFields(window.assessmentValues[i]);
+                    extendQueryFields(window.queryValues[i]);
+                    fieldCount++;
+                }
             }
         }
     });
-</script>
-{{end}}
 
-<script>
     function extendAssessmentFields(initialValue = '') {
-        const assessmentField = document.createElement("div");
-        assessmentField.classList.add("assessmentField", "mb-4");
-        assessmentField.setAttribute('data-group-id', fieldCount);
-        
-        const labelAndRemoveButtonWrapper = document.createElement("div");
-        labelAndRemoveButtonWrapper.classList.add("flex", "justify-between", "items-center");
-        assessmentField.appendChild(labelAndRemoveButtonWrapper);
-    
+        const assessmentFieldsContainer = document.getElementById("assessmentFieldsContainer");
+        if(!assessmentFieldsContainer) return;
+
+        // Create the outer div wrapper
+        const outerDiv = document.createElement("div");
+        outerDiv.classList.add("assessmentField", "mb-4");
+
+        // Create the label
         const label = document.createElement("label");
         label.textContent = "Assessment:";
         label.htmlFor = "assessment-" + fieldCount;
         label.classList.add("block", "text-black-700", "font-bold", "mb-2");
-        labelAndRemoveButtonWrapper.appendChild(label);
-    
-        const textarea = document.createElement("textarea");
-        textarea.disabled = true;
-        textarea.name = "assessment";
-        textarea.id = "assessment-" + fieldCount;
-        textarea.classList.add("w-full", "py-2", "px-4", "border", "border-black-300", "rounded-md", "shadow-sm", "focus:outline-none", "focus:ring-green-500", "focus:border-green-500", "text-black");
-        textarea.placeholder = "Enter your assessment";
-        textarea.onkeydown = function (event) {
-            console.log(this.id, textarea.id)
-            showSearchBox(event, this.id);
-        };
-        assessmentField.appendChild(textarea);
 
-        if (initialValue) {
-            textarea.value = initialValue;
-        }
-    
-        document.getElementById("assessmentFieldsContainer").appendChild(assessmentField);
+        // Create the div element for the assessment field
+        const assessmentField = document.createElement("div");
+        assessmentField.id = "assessment-" + fieldCount;
+        assessmentField.classList.add(
+            "w-full", "py-2", "px-4", "border", "border-black-300", 
+            "rounded-md", "shadow-sm", "focus:outline-none", 
+            "focus:ring-green-500", "focus:border-green-500", 
+            "text-black"
+        );
+        assessmentField.setAttribute('data-group-id', fieldCount);
+        assessmentField.contentEditable = 'false';
+        assessmentField.innerHTML = initialValue;
+
+        // Append label and assessmentField to the outerDiv
+        outerDiv.appendChild(label);
+        outerDiv.appendChild(assessmentField);
+
+        // Append the outerDiv to the container
+        assessmentFieldsContainer.appendChild(outerDiv);
+        
+        // Increase the field count for next time
+        fieldCount++;
     }
 
     function extendQueryFields(initialValue = '') {
         const queryField = document.createElement("div");
-        queryField.classList.add("queryField", "mb-4");
+        queryField.classList.add("queryField", "mb-4", "w-full", "py-2", "px-4", "border", "border-black-300", "rounded-md", "shadow-sm", "focus:outline-none", "focus:ring-green-500", "focus:border-green-500", "text-black");
         queryField.setAttribute('data-group-id', fieldCount);
+        queryField.contentEditable = 'false';
 
         const queryLabel = document.createElement("label");
         queryLabel.textContent = "Query:";
         queryLabel.htmlFor = "query-" + fieldCount;
         queryLabel.classList.add("block", "text-black-700", "font-bold", "mb-2");
-        queryField.appendChild(queryLabel);
 
-        const queryTextarea = document.createElement("textarea");
-        queryTextarea.disabled = true;
-        queryTextarea.name = "query";
-        queryTextarea.id = "query-" + fieldCount;
-        queryTextarea.classList.add("w-full", "py-2", "px-4", "border", "border-black-300", "rounded-md", "shadow-sm", "focus:outline-none", "focus:ring-green-500", "focus:border-green-500", "text-black");
-        queryTextarea.placeholder = "Enter your query";
-        queryField.appendChild(queryTextarea);
+        queryField.textContent = initialValue;
 
-        if (initialValue) {
-            queryTextarea.value = initialValue;
-        }
-
+        document.getElementById("queryFieldsContainer").appendChild(queryLabel);
         document.getElementById("queryFieldsContainer").appendChild(queryField);
     }
 </script>

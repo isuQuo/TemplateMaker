@@ -10,7 +10,7 @@ require (
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/justinas/alice v1.2.0
 	github.com/justinas/nosurf v1.1.1
-	golang.org/x/crypto v0.8.0
+	golang.org/x/crypto v0.14.0
 )
 
 require (
@@ -19,4 +19,9 @@ require (
 	golang.org/x/sync v0.3.0
 )
 
-require golang.org/x/net v0.9.0 // indirect
+require (
+	github.com/aymerick/douceur v0.2.0 // indirect
+	github.com/gorilla/css v1.0.0 // indirect
+	github.com/microcosm-cc/bluemonday v1.0.26 // indirect
+	golang.org/x/net v0.17.0 // indirect
+)

@@ -48,6 +48,12 @@ func newTemplateCache() (map[string]*template.Template, error) {
 			page,
 		}
 
+		functions := template.FuncMap{
+			"sanitizeHTML":      sanitizeHTMLFunc,
+			"sanitizeHTMLSlice": sanitizeHTMLSliceFunc,
+			"json":              toJSONFunc,
+		}
+
 		ts, err := template.New(name).Funcs(functions).ParseFS(ui.Files, patterns...)
 		if err != nil {
 			return nil, err
